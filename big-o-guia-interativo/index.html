@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Big O: guia interativo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --papel: #F6F9FB; --grade: #DCE6EE; --tinta: #1F3A5F; --tinta-suave: #4D6684;
+  --vermelho: #C8372D; --verde: #2E7D4F; --codigo: #EAF0F6; --borda: #B5C6D8;
+  --esclera: #FFFFFF; --iris: #2F6FA3; --pupila: #0F1E2E; --palpebra: #1F3A5F;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --papel: #142030; --grade: #1E2D40; --tinta: #D6E4F3; --tinta-suave: #9DB2C9;
+    --vermelho: #FF8F84; --verde: #7FD1A0; --codigo: #1B2A3B; --borda: #34485F;
+    --esclera: #E8EEF4; --iris: #6FA8DC; --pupila: #0B1520; --palpebra: #D6E4F3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --papel: #142030; --grade: #1E2D40; --tinta: #D6E4F3; --tinta-suave: #9DB2C9;
+  --vermelho: #FF8F84; --verde: #7FD1A0; --codigo: #1B2A3B; --borda: #34485F;
+  --esclera: #E8EEF4; --iris: #6FA8DC; --pupila: #0B1520; --palpebra: #D6E4F3;
+  color-scheme: dark;
+}
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0; color: var(--tinta); background: var(--papel);
+  font-family: "Atkinson Hyperlegible", Arial, "Helvetica Neue", sans-serif;
+  font-size: 1.0625rem; line-height: 1.6;
+}
+.quadriculado {
+  background-color: var(--papel);
+  background-image: linear-gradient(var(--grade) 1px, transparent 1px),
+                    linear-gradient(90deg, var(--grade) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+#pagina { min-height: 100vh; }
+#app:focus { outline: none; }
+.coluna { max-width: 68rem; margin: 0 auto; padding: 0 1.25rem; }
+.leitura { max-width: 42rem; }
+a { color: inherit; text-underline-offset: 4px; }
+a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--tinta); outline-offset: 3px; border-radius: 4px;
+}
+h1, h2, h3 { font-family: "Bricolage Grotesque", "Atkinson Hyperlegible", Arial, sans-serif; line-height: 1.15; }
+h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 800; margin: 3.5rem 0 1rem; }
+h3 { font-size: 1.25rem; font-weight: 800; margin: 2.25rem 0 .6rem; }
+p { margin: 0 0 1rem; }
+.apoio { color: var(--tinta-suave); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+code, pre, .mono { font-family: "JetBrains Mono", "Courier New", monospace; }
+code { font-size: .92em; }
+pre {
+  margin: 0 0 1.25rem; padding: 1rem 1.1rem; overflow-x: auto;
+  background: var(--codigo); border-left: 3px solid var(--tinta);
+  font-size: .9rem; line-height: 1.55;
+}
+.caneta { font-family: "Caveat", "Comic Sans MS", cursive; font-weight: 600; }
+
+/* ---------------- topo e olho ---------------- */
+.topo { padding: 1.25rem 0 0; }
+.topo .coluna { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.marca {
+  position: relative; display: inline-flex; align-items: baseline;
+  font-family: "Bricolage Grotesque", Arial, sans-serif; font-weight: 800;
+  --fs: 2rem; font-size: var(--fs); line-height: 1; letter-spacing: -.02em;
+}
+.marca a { text-decoration: none; }
+.interruptor { position: relative; display: inline-block; margin-left: .04em; }
+.trilho {
+  position: absolute; left: .07em; top: .11em; width: 1.72em; height: .84em;
+  border: max(1.5px, .03em) dashed var(--tinta-suave); border-radius: 999px;
+  opacity: 0; transition: opacity .35s; pointer-events: none;
+}
+.interruptor.aberto .trilho { opacity: .75; }
+.olho-btn {
+  font: inherit; padding: 0; border: 0; background: none; color: var(--tinta);
+  cursor: pointer; line-height: 0; border-radius: 50%; position: relative; touch-action: none;
+  transition: transform .45s cubic-bezier(.3, 1.45, .5, 1);
+}
+.interruptor.aberto .olho-btn { cursor: grab; }
+.olho-btn.arrastando { transition: none; cursor: grabbing; }
+.olho-btn svg { width: .93em; height: 1em; overflow: visible; display: block; transform: translateY(.12em); }
+.olho-anel { fill: none; stroke: var(--tinta); stroke-width: 14; }
+.olho-dentro { opacity: 0; }
+.olho-cilios { opacity: 0; stroke: var(--tinta); stroke-width: 5; stroke-linecap: round; fill: none; }
+.olho-esclera { fill: var(--esclera); }
+.olho-iris { fill: var(--iris); }
+.olho-pupila { fill: var(--pupila); }
+.olho-brilho { fill: #fff; }
+.olho-palpebra { fill: var(--palpebra); }
+.menu { display: flex; gap: 1.25rem; font-weight: 700; }
+.topo[data-modo="hero"] .menu { display: none; }
+.topo[data-modo="hero"] .marca { --fs: clamp(5.5rem, 24vw, 13rem); margin: 1.5rem 0 0; }
+.dica {
+  display: none; position: absolute; left: 100%; top: 4%;
+  margin-left: .15em; width: max-content; color: var(--vermelho);
+  font-family: "Caveat", "Comic Sans MS", cursive; font-weight: 600;
+  font-size: clamp(1.3rem, 4.5vw, 2rem); letter-spacing: 0; line-height: 1.1;
+  transform: rotate(-6deg); pointer-events: none;
+}
+.dica svg { display: block; width: 2.4em; height: 1.6em; margin: .1em 0 0 -.6em; }
+.dica small { display: block; font-size: .62em; margin-top: .2em; }
+.interruptor.aberto ~ .dica { left: calc(100% + var(--fs) * .95); }
+.topo[data-modo="hero"] .dica { display: block; }
+@media (max-width: 700px) {
+  .topo[data-modo="hero"] .marca { flex-wrap: wrap; justify-content: flex-start; }
+  .topo[data-modo="hero"] .dica {
+    position: static; flex-basis: 100%; order: 3; margin: -.2em 0 0;
+    display: flex; flex-direction: column; align-items: flex-end;
+    text-align: right; font-size: 1.35rem; transform: rotate(-3deg);
+  }
+  .topo[data-modo="hero"] .dica svg { order: -1; width: 2em; height: 1.3em; margin: 0 1.2em .1em 0; transform: rotate(35deg); }
+}
+
+/* ---------------- ordenações ---------------- */
+.ms-linhas { display: grid; gap: .6rem; margin: 1.1rem auto; max-width: 30rem; }
+.ms-linha { display: flex; gap: .6rem; }
+.ms-linha.oculta { visibility: hidden; }
+.ms-seg { display: flex; gap: .2rem; flex: 1; padding: .2rem; border-radius: 6px; outline: 1.5px solid transparent; transition: outline-color .2s; }
+.ms-seg.ativo { outline: 1.5px dashed var(--tinta-suave); }
+.ms-cel {
+  flex: 1; min-width: 0; aspect-ratio: 1; display: grid; place-items: center;
+  border: 1.5px solid var(--borda); background: var(--papel);
+  font-family: "JetBrains Mono", monospace; font-weight: 600; font-size: clamp(.68rem, 2.6vw, .95rem);
+  transition: background-color .2s, border-color .2s;
+}
+.ms-cel.vazia { border-style: dashed; color: transparent; }
+.ms-cel.comparando { border: 2.5px solid var(--vermelho); }
+.ms-cel.colocado { background: var(--codigo); border-color: var(--tinta); }
+.ms-cel.ordenado { border: 2.5px solid var(--verde); border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px; }
+.ms-msg { min-height: 3.3em; }
+.rotulo-grupo { display: block; font-weight: 700; font-size: .95rem; margin-top: .75rem; }
+.grupo { display: flex; flex-wrap: wrap; gap: .4rem; margin: .3rem 0 0; }
+.chip {
+  font: inherit; font-size: .9rem; padding: .3rem .8rem; cursor: pointer;
+  border: 1.5px solid var(--borda); border-radius: 999px; background: var(--papel); color: var(--tinta);
+}
+.chip[aria-pressed="true"] { border-color: var(--tinta); background: var(--tinta); color: var(--papel); }
+.corrida-linha { margin: 1rem 0; }
+.corrida-cab { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; flex-wrap: wrap; font-size: .95rem; }
+.corrida-cab .big { color: var(--tinta-suave); font-family: "JetBrains Mono", monospace; font-size: .85rem; margin-left: .35rem; }
+.corrida-canvas { width: 100%; height: 64px; display: block; background: var(--codigo); border: 1px solid var(--borda); margin-top: .3rem; }
+.lugar { color: var(--vermelho); font-family: "Caveat", "Comic Sans MS", cursive; font-weight: 600; font-size: 1.5rem; line-height: 1; margin-right: .4rem; }
+
+/* ---------------- história de ninar ---------------- */
+html:root.ninar {
+  --papel: #F2E7D3; --grade: #E3D4B9; --tinta: #2E2418; --tinta-suave: #6B5A44;
+  --vermelho: #9A3B22; --verde: #3D6B35; --codigo: #E9DDC7; --borda: #C9B593;
+  --esclera: #FFF8E6; --iris: #E0A23A; --pupila: #1E140A; --palpebra: #F4C66B;
+  color-scheme: light;
+}
+html.ninar body { background: #06070c; }
+html.ninar .interruptor { z-index: 95; }
+html.ninar .olho-anel, html.ninar .olho-cilios { stroke: #F4C66B; }
+html.ninar .olho-btn svg { filter: drop-shadow(0 0 .06em rgba(255, 205, 110, .95)) drop-shadow(0 0 .28em rgba(255, 180, 80, .55)); }
+html.ninar .trilho { border-color: rgba(244, 198, 107, .75); }
+html.ninar .dica { z-index: 95; color: #F4C66B; text-shadow: 0 0 .25em rgba(20, 12, 4, .85), 0 0 .6em rgba(20, 12, 4, .6); }
+.camada-noite { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.camada-noite.luz { z-index: 88; mix-blend-mode: multiply; }
+.camada-noite.escuro { z-index: 89; }
+.camada-noite.poeira { z-index: 90; }
+.historia.coluna { max-width: 40rem; margin-top: 2.5rem; font-size: 1.2rem; line-height: 1.8; }
+.historia h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); margin: 0 0 1rem; }
+.historia h2 { font-size: 1.6rem; margin: 0 0 .75rem; }
+.capitulo { margin: 4rem 0; }
+.ano { display: inline-block; font-family: "Caveat", "Comic Sans MS", cursive; font-weight: 600; font-size: 2.3rem; line-height: 1; color: var(--vermelho); transform: rotate(-3deg); margin: 0 0 .3rem; }
+.boa-noite { font-family: "Caveat", "Comic Sans MS", cursive; font-weight: 600; font-size: 2.6rem; text-align: center; margin: 4rem 0 1.5rem; }
+.acordar { text-align: center; margin-bottom: 4rem; }
+@media (max-width: 700px) {
+  html.ninar .topo[data-modo="hero"] .dica { position: relative; left: auto; }
+}
+
+/* ---------------- página inicial ---------------- */
+.subtitulo { font-size: clamp(1.15rem, 2.6vw, 1.45rem); max-width: 34rem; margin: 2.5rem 0 0; }
+.resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.5rem 2.5rem; }
+.resumo h3 { margin-top: 0; }
+.resumo p { margin: 0; }
+.modulos { display: grid; grid-template-columns: repeat(auto-fill, minmax(18.5rem, 1fr)); gap: 1.25rem; padding: 0; margin: 0; list-style: none; }
+.modulo {
+  display: block; height: 100%; text-decoration: none; color: inherit;
+  border: 1.5px solid var(--tinta); background: var(--papel);
+  padding: 1rem 1.1rem 1.15rem;
+}
+.modulo:hover .curva-mini { animation: redesenhar .7s ease-out; }
+@keyframes redesenhar { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.modulo .plot { width: 100%; height: auto; display: block; margin-bottom: .75rem; }
+.modulo .rotulo { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 1.35rem; }
+.modulo .nome { font-family: "Bricolage Grotesque", Arial, sans-serif; font-weight: 800; font-size: 1.2rem; margin-left: .5rem; }
+.modulo p { margin: .35rem 0 0; color: var(--tinta-suave); }
+.plot .eixo { stroke: var(--tinta-suave); stroke-width: 1.5; fill: none; }
+.plot .curva-mini { fill: none; stroke: var(--tinta); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.chamada-desafio {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;
+  border-top: 1.5px solid var(--tinta); border-bottom: 1.5px solid var(--tinta);
+  padding: 1.5rem 0; margin-top: 3.5rem;
+}
+.chamada-desafio h2 { margin: 0; }
+.chamada-desafio p { margin: .25rem 0 0; }
+
+.botao {
+  display: inline-block; font: inherit; font-weight: 700; text-decoration: none;
+  color: var(--papel); background: var(--tinta); border: 0; border-radius: 6px;
+  padding: .7rem 1.25rem; cursor: pointer;
+}
+.botao.secundario { color: var(--tinta); background: transparent; border: 1.5px solid var(--tinta); }
+.botao:disabled { opacity: .45; cursor: default; }
+
+/* ---------------- módulo ---------------- */
+.mod-topo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 2rem; align-items: end; margin-top: 2.5rem; }
+@media (max-width: 760px) { .mod-topo { grid-template-columns: 1fr; } }
+.mod-topo h1 { margin: 0; }
+.mod-topo .grande { display: block; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: clamp(3rem, 10vw, 5.5rem); line-height: 1; letter-spacing: -.03em; }
+.mod-topo .nome { display: block; font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-top: .4rem; }
+.mod-topo .frase { font-size: 1.25rem; margin: 1rem 0 0; }
+.mod-topo .plot { width: 100%; height: auto; display: block; }
+.mod-topo .plot .curva-mini { stroke-width: 4; }
+.sinais { padding-left: 1.2rem; margin: 0; }
+.sinais li { margin-bottom: .5rem; }
+.mod-nav { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 4rem; padding-top: 1.25rem; border-top: 1.5px solid var(--tinta); }
+.mod-nav a { font-weight: 700; }
+.mod-nav span { display: block; font-weight: 400; color: var(--tinta-suave); font-size: .9rem; }
+
+/* demos */
+.demo { border: 1.5px dashed var(--borda); padding: 1.25rem; background: var(--papel); }
+.demo label { font-weight: 700; display: block; margin-bottom: .25rem; }
+.demo input[type="range"] { width: 100%; max-width: 24rem; accent-color: var(--tinta); }
+.demo .linha-botoes { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
+.caixas { display: flex; flex-wrap: wrap; gap: .35rem; margin: 1rem 0; }
+.caixa {
+  min-width: 2.6rem; height: 2.6rem; display: grid; place-items: center;
+  border: 1.5px solid var(--borda); font-family: "JetBrains Mono", monospace; font-size: .9rem;
+  transition: background-color .15s, border-color .15s;
+}
+.caixa.olhando { border-color: var(--tinta); background: var(--codigo); }
+.caixa.achou { border: 2.5px solid var(--verde); border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px; }
+.caixa.descartada { opacity: .35; }
+.placar { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 1.1rem; }
+.chute { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 3.5rem; line-height: 1; margin: .5rem 0; }
+.faixa { position: relative; height: .7rem; background: var(--codigo); border: 1px solid var(--borda); margin: .75rem 0; }
+.faixa i { position: absolute; top: 0; bottom: 0; background: var(--tinta); transition: left .3s, width .3s; }
+.barras { display: grid; gap: .6rem; margin: 1rem 0; }
+.barra-rotulo { display: flex; justify-content: space-between; gap: 1rem; font-size: .95rem; }
+.barra { height: 1.1rem; background: var(--codigo); border: 1px solid var(--borda); }
+.barra i { display: block; height: 100%; background: var(--tinta); transition: width .3s; min-width: 2px; }
+.roda { width: 100%; max-width: 20rem; height: auto; display: block; margin: .5rem auto; }
+.roda line { stroke: var(--tinta-suave); stroke-width: 1.2; }
+.roda circle { fill: var(--papel); stroke: var(--tinta); stroke-width: 2.5; }
+
+/* testes e desafio */
+.opcoes { display: grid; gap: .6rem; padding: 0; margin: 0 0 1.25rem; list-style: none; }
+.opcoes.classes6 { grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr)); }
+.opcao {
+  width: 100%; display: flex; align-items: center; gap: .75rem; text-align: left;
+  font: inherit; color: var(--tinta); background: var(--papel);
+  border: 1.5px solid var(--borda); border-radius: 6px; padding: .6rem .8rem; cursor: pointer;
+}
+.opcao:hover:not(:disabled) { border-color: var(--tinta); }
+.opcao:disabled { cursor: default; }
+.opcao pre { margin: 0; padding: 0; background: none; border: 0; font-size: .85rem; flex: 1; }
+.opcao .tecla { color: var(--tinta-suave); font-size: .8rem; width: 1ch; }
+.opcao .rot { font-family: "JetBrains Mono", monospace; font-weight: 600; }
+.opcao .nm { display: block; font-size: .85rem; color: var(--tinta-suave); }
+.opcao svg { flex: none; }
+.opcao.certa { border: 2.5px solid var(--verde); border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px; }
+.opcao.errada { border-color: var(--vermelho); }
+.opcao.errada .rot, .opcao.errada pre { text-decoration: line-through 2px var(--vermelho); }
+.correcao .caneta { display: inline-block; font-size: 1.9rem; line-height: 1; transform: rotate(-3deg); margin-bottom: .4rem; }
+.correcao.ok .caneta { color: var(--verde); }
+.correcao.erro .caneta { color: var(--vermelho); }
+.progresso { display: flex; justify-content: space-between; color: var(--tinta-suave); margin-bottom: .75rem; }
+.enunciado { font-size: 1.15rem; font-weight: 700; }
+.nota {
+  display: inline-block; font-family: "Caveat", "Comic Sans MS", cursive; font-weight: 600;
+  font-size: 3.2rem; line-height: 1; color: var(--vermelho); padding: .35rem 1rem;
+  border: 2.5px solid currentColor; border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+  transform: rotate(-4deg); margin: .5rem 0 1.25rem;
+}
+.revisao { padding-left: 1.25rem; }
+.revisao li { margin-bottom: 1rem; }
+
+footer { margin-top: 5rem; padding: 1.5rem 0 3rem; color: var(--tinta-suave); font-size: .9rem; }
+
+/* ---------------- transição entre telas ---------------- */
+#transicao { position: fixed; inset: 0; z-index: 100; display: none; }
+#transicao.ativa { display: block; }
+#transicao svg { width: 100%; height: 100%; display: block; }
+#transicao .eixo { stroke: var(--tinta-suave); stroke-width: 2; fill: none; }
+#transicao .curva { fill: none; stroke: var(--tinta); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+#transicao text { fill: var(--tinta); font-family: "JetBrains Mono", monospace; font-weight: 700; }
+#transicao .ponta circle { fill: var(--tinta); }
+#transicao .ponta .ponta-halo { fill: var(--tinta); opacity: .14; }
+.mod-topo .plot .curva-mini { animation: redesenhar 1s cubic-bezier(.3, .7, .2, 1) .2s both; }
+.correcao .caneta { animation: escrever .5s cubic-bezier(.4, 0, .2, 1) both; }
+@keyframes escrever { from { clip-path: inset(-10% 100% -10% 0); } to { clip-path: inset(-10% -2% -10% 0); } }
+.opcao.certa { position: relative; border-color: transparent; }
+.opcao.certa::after {
+  content: ""; position: absolute; inset: -4px; pointer-events: none;
+  border: 2.5px solid var(--verde); border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+  animation: circular .55s cubic-bezier(.4, 0, .2, 1) both;
+}
+@keyframes circular { from { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); } to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); } }
+.opcao.errada { animation: tremer .35s ease-in-out; }
+@keyframes tremer { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+.nota { animation: carimbo .55s cubic-bezier(.2, 1.6, .4, 1) both; }
+@keyframes carimbo { from { transform: rotate(-14deg) scale(1.7); opacity: 0; } to { transform: rotate(-4deg) scale(1); opacity: 1; } }
+.ms-cel.colocado { animation: subir .38s cubic-bezier(.2, .9, .3, 1.25); }
+@keyframes subir { from { transform: translateY(85%); opacity: .25; } }
+.ms-cel.comparando { animation: pulso .35s ease-out; }
+@keyframes pulso { 45% { transform: scale(1.14); } }
+.ms-cel.ordenado { animation: subir .45s cubic-bezier(.2, .9, .3, 1.25) both; }
+.ms-linha .ms-seg .ms-cel.ordenado:nth-child(2) { animation-delay: .04s; } .ms-cel.ordenado:nth-child(3) { animation-delay: .08s; }
+.ms-cel.ordenado:nth-child(4) { animation-delay: .12s; } .ms-cel.ordenado:nth-child(5) { animation-delay: .16s; }
+.ms-cel.ordenado:nth-child(6) { animation-delay: .2s; } .ms-cel.ordenado:nth-child(7) { animation-delay: .24s; }
+.ms-cel.ordenado:nth-child(8) { animation-delay: .28s; }
+.caixa.achou { animation: subir .35s cubic-bezier(.2, .9, .3, 1.25); }
+#pagina.revelando { position: relative; z-index: 101; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+</style>
+</head>
+<body class="quadriculado">
+<div id="pagina" class="quadriculado">
+  <header class="topo" id="topo" data-modo="hero">
+    <div class="coluna">
+      <div class="marca">
+        <a href="#inicio" id="marca-link">Big</a>
+        <span class="interruptor" id="interruptor">
+        <span class="trilho" aria-hidden="true"></span>
+        <button class="olho-btn" id="olho-btn" type="button" aria-pressed="false" aria-label="Abrir o olho do O" aria-describedby="olho-ajuda">
+          <svg viewBox="-8 -16 116 124" aria-hidden="true">
+            <defs><clipPath id="olho-clip"><ellipse cx="50" cy="50" rx="31" ry="37"/></clipPath></defs>
+            <g class="olho-dentro" id="olho-dentro" clip-path="url(#olho-clip)">
+              <rect class="olho-esclera" x="0" y="0" width="100" height="100"/>
+              <g id="olho-iris">
+                <circle class="olho-iris" cx="50" cy="52" r="16"/>
+                <circle class="olho-pupila" cx="50" cy="52" r="7.5"/>
+                <circle class="olho-brilho" cx="44.5" cy="46.5" r="3"/>
+              </g>
+              <path class="olho-palpebra" id="palpebra-cima" d="M-5 -5 H105 V50 Q50 64 -5 50 Z"/>
+              <path class="olho-palpebra" id="palpebra-baixo" d="M-5 105 H105 V50 Q50 64 -5 50 Z"/>
+            </g>
+            <ellipse class="olho-anel" cx="50" cy="50" rx="37.5" ry="43.5"/>
+            <path class="olho-cilios" id="olho-cilios" d="M28 12 L20 1 M50 5 L50 -9 M72 12 L80 1"/>
+          </svg>
+        </button>
+        </span>
+        <span class="dica" id="dica" aria-hidden="true"><span><span id="dica-texto">clique no O</span><small id="dica-extra"></small></span>
+          <svg viewBox="0 0 60 40"><path d="M50 4 C40 30 20 34 6 22 M6 22 L16 21 M6 22 L9 31" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </span>
+      </div>
+      <span id="olho-ajuda" class="sr">Com o olho aberto, arraste ele para a direita, ou aperte a seta para a direita, para ligar o modo história de ninar.</span>
+      <nav class="menu" aria-label="Principal">
+        <a href="#inicio">Início</a>
+        <a href="#desafio">Desafio</a>
+      </nav>
+    </div>
+  </header>
+  <main id="app" tabindex="-1"></main>
+  <footer>
+    <div class="coluna">Material de apoio do trabalho “Big O e Complexidade de Algoritmos”, de Davi Dandrea Siqueira, Julia Zamoner e Alvaro Danko.</div>
+  </footer>
+</div>
+<div id="transicao" class="quadriculado" aria-hidden="true"><svg id="transicao-svg"></svg></div>
+<p id="aviso" class="sr" aria-live="polite"></p>
+
+<script>
+(() => {
+"use strict";
+const reduzirMovimento = matchMedia("(prefers-reduced-motion: reduce)");
+
+/* ================================================================ utilidades */
+const $ = s => document.querySelector(s);
+function el(tag, props = {}, filhos = []) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v;
+    else if (k === "text") e.textContent = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v);
+  }
+  for (const f of [].concat(filhos)) if (f != null && f !== false) e.append(f);
+  return e;
+}
+const NS = "http://www.w3.org/2000/svg";
+function svg(tag, attrs = {}, filhos = []) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  for (const f of [].concat(filhos)) if (f) e.append(f);
+  return e;
+}
+const embaralhar = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const fmt = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
+const avisar = m => { $("#aviso").textContent = m; };
+const armazenamento = {
+  ler(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  gravar(k, v) { try { localStorage.setItem(k, v); } catch { /* indisponível */ } },
+};
+
+/* ================================================================ classes */
+const N_MAX = 16, Y_MAX = 64;
+const CLASSES = [
+  { id: "constante", rot: "O(1)", nome: "Constante", f: () => 1, facil: "c1",
+    frase: "O custo não muda, tanto faz se a entrada tem 10 ou 10 milhões de itens.",
+    analogia: "É como pegar o controle remoto quando você sabe que ele está na mesa de centro. A casa pode ter dois ou vinte cômodos: você vai direto nele, sem procurar.",
+    sinais: ["Acesso direto por índice, como lista[i].", "Busca de chave em dicionário ou set (em média).", "Contas simples, sem nenhum laço que dependa do tamanho da entrada."],
+    codigo: "def primeiro(fila):\n    return fila[0]",
+    nota: "Não importa o tamanho da fila: o Python vai direto na posição 0.",
+    teste: { q: "Qual destes trechos é O(1)?", certa: 0, ops: ['preco = precos["café"]', "for p in precos:\n    print(p)", "ordenados = sorted(precos)"],
+      exp: "Buscar uma chave no dicionário é O(1) em média. Percorrer tudo é O(n) e ordenar é O(n log n)." } },
+  { id: "logaritmica", rot: "O(log n)", nome: "Logarítmica", f: n => Math.log2(n),
+    frase: "A cada passo, o problema cai pela metade.",
+    analogia: "Pense no jogo de adivinhar um número de 1 a 100 em que a outra pessoa só responde “maior” ou “menor”. Chutando sempre no meio, você acerta em no máximo 7 tentativas. Com 1 milhão de números, bastam umas 20.",
+    sinais: ["Um laço em que n é dividido por 2 (ou outro número) a cada volta.", "Busca binária em uma lista já ordenada.", "Estruturas em árvore balanceada, como os índices de bancos de dados."],
+    codigo: "def busca_binaria(lista, alvo):\n    ini, fim = 0, len(lista) - 1\n    while ini <= fim:\n        meio = (ini + fim) // 2\n        if lista[meio] == alvo:\n            return meio\n        if lista[meio] < alvo:\n            ini = meio + 1\n        else:\n            fim = meio - 1\n    return -1",
+    nota: "Cada volta do while descarta metade do que sobrou. Só funciona se a lista estiver ordenada.",
+    teste: { q: "Qual destes trechos é O(log n)?", certa: 1, ops: ["while n > 1:\n    n = n - 2", "while n > 1:\n    n = n // 2", "for i in range(n):\n    print(i)"],
+      exp: "Dividir n por 2 até chegar em 1 leva log₂ n voltas. Subtrair 2 a cada volta ainda leva cerca de n/2 voltas, ou seja, O(n)." } },
+  { id: "linear", rot: "O(n)", nome: "Linear", f: n => n,
+    frase: "O trabalho cresce na mesma proporção da entrada.",
+    analogia: "É procurar uma camiseta específica numa pilha bagunçada, olhando peça por peça. Se a pilha dobrar, o trabalho também dobra.",
+    sinais: ["Um laço que passa uma vez por cada item.", "Dois laços separados, um depois do outro: O(2n) vira O(n).", "Funções prontas que percorrem tudo, como sum(), max() e x in lista."],
+    codigo: "total = 0\nfor nota in notas:\n    total += nota",
+    nota: "Uma passada por cada nota. Mil notas, mil voltas.",
+    teste: { q: "Qual destes trechos é O(n)?", certa: 2, ops: ["nota = notas[3]", "for a in notas:\n    for b in notas:\n        print(a, b)", "maior = max(notas)"],
+      exp: "O max() precisa olhar todas as notas uma vez, então é O(n). Acessar uma posição é O(1) e o laço duplo é O(n²)." } },
+  { id: "linearitmica", rot: "O(n log n)", nome: "Linearítmica", f: n => n * Math.log2(n),
+    frase: "O ritmo dos bons algoritmos de ordenação: um pouco mais que linear, muito menos que quadrático.",
+    analogia: "Uma professora precisa ordenar 200 provas. Ela divide a pilha entre monitores, cada um organiza a sua parte e no final as pilhas já ordenadas são intercaladas.",
+    sinais: ["Ordenação com sorted() ou lista.sort().", "Dividir o problema ao meio várias vezes (log n níveis) e trabalhar em todos os itens a cada nível (n).", "Merge Sort, Heapsort e o Timsort, usado pelo Python."],
+    codigo: "def merge_sort(v):\n    if len(v) <= 1:\n        return v\n    meio = len(v) // 2\n    esquerda = merge_sort(v[:meio])\n    direita = merge_sort(v[meio:])\n    return intercalar(esquerda, direita)  # junta em O(n)",
+    nota: "A lista é dividida ao meio log n vezes, e em cada nível todos os n itens são intercalados.",
+    teste: { q: "Qual destes trechos é O(n log n)?", certa: 0, ops: ["notas.sort()", "notas.append(10)", "for n in notas:\n    print(n)"],
+      exp: "O sort() do Python usa o Timsort, que é O(n log n). O append é O(1) e o laço simples é O(n)." } },
+  { id: "quadratica", rot: "O(n²)", nome: "Quadrática", f: n => n * n,
+    frase: "Cada item é comparado com todos os outros.",
+    analogia: "É aquela dinâmica de primeiro dia de aula em que todo mundo cumprimenta todo mundo. Com 10 pessoas são 45 apertos de mão. Com 100, são 4.950.",
+    sinais: ["Um laço dentro de outro, os dois percorrendo a entrada.", "Laço escondido dentro de laço, como x in lista ou lista.count() dentro de um for.", "Ordenações simples, como o Bubble Sort."],
+    codigo: "def tem_repetido(lista):\n    for i in range(len(lista)):\n        for j in range(i + 1, len(lista)):\n            if lista[i] == lista[j]:\n                return True\n    return False",
+    nota: "Trocando a lista por um set, dá para resolver o mesmo problema em O(n).",
+    teste: { q: "Qual destes trechos é O(n²)?", certa: 1, ops: ["for a in alunos:\n    print(a)\nfor b in alunos:\n    print(b)", "for a in alunos:\n    for b in alunos:\n        comparar(a, b)", "primeiro = alunos[0]"],
+      exp: "Laço dentro de laço dá n × n. Já os dois laços separados somam O(n + n), que é O(n)." } },
+  { id: "exponencial", rot: "O(2ⁿ)", nome: "Exponencial", f: n => 2 ** n,
+    frase: "Cada item a mais dobra o trabalho.",
+    analogia: "É uma corrente de mensagem em que cada pessoa repassa o texto para outras duas. Em poucas rodadas, ninguém consegue mais contar quantas mensagens existem.",
+    sinais: ["Função recursiva que chama a si mesma duas vezes, sem guardar resultados.", "Testar todas as combinações ou subconjuntos possíveis.", "Força bruta em senhas: cada bit a mais dobra as tentativas."],
+    codigo: "def fib(n):\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)",
+    nota: "Cada chamada abre outras duas e os mesmos valores são recalculados de novo e de novo. Com @lru_cache, o custo cai para O(n).",
+    teste: { q: "Qual destes trechos é O(2ⁿ)?", certa: 2, ops: ["a, b = 0, 1\nfor _ in range(n):\n    a, b = b, a + b", "dobro = n * 2", "def f(n):\n    if n == 0:\n        return 1\n    return f(n - 1) + f(n - 1)"],
+      exp: "A função f chama a si mesma duas vezes a cada nível: 2 × 2 × … × 2 = 2ⁿ chamadas. O Fibonacci com laço é O(n) e a multiplicação é O(1)." } },
+];
+const POR_ID = Object.fromEntries(CLASSES.map(c => [c.id, c]));
+
+/* curvas: mesma matemática nos cards, no topo do módulo e na transição */
+function pontosCurva(c, w, h, passos = 140, alem = 0) {
+  const pts = [];
+  for (let i = 0; i <= passos; i++) {
+    const n = 1 + (N_MAX - 1) * (i / passos);
+    const v = c.f(n);
+    const y = h - (Math.min(v, Y_MAX * (1 + alem)) / Y_MAX) * h;
+    pts.push([(i / passos) * w, y]);
+    if (v >= Y_MAX * (1 + alem)) break;
+  }
+  return pts;
+}
+const caminho_ = pts => pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+
+function plot(c, { w = 320, h = 170 } = {}) {
+  const m = 14;
+  const s = svg("svg", { class: "plot", viewBox: `0 0 ${w} ${h}`, "aria-hidden": "true" });
+  s.append(svg("path", { class: "eixo", d: `M${m} ${m - 6} V${h - m} H${w - m + 6}` }));
+  const pts = pontosCurva(c, w - 2 * m - 6, h - 2 * m - 6).map(([x, y]) => [x + m, y + m + 6]);
+  s.append(svg("path", { class: "curva-mini", d: caminho_(pts), pathLength: "1", "stroke-dasharray": "1" }));
+  return s;
+}
+function miniCurva(c) {
+  const w = 30, h = 20;
+  const s = svg("svg", { width: w + 4, height: h + 4, viewBox: `-2 -2 ${w + 4} ${h + 4}`, "aria-hidden": "true" });
+  s.append(svg("path", { d: caminho_(pontosCurva(c, w, h, 40)), fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round" }));
+  return s;
+}
+
+/* ================================================================ o olho */
+const olho = (() => {
+  const btn = $("#olho-btn"), interruptor = $("#interruptor"), dentro = $("#olho-dentro"), iris = $("#olho-iris");
+  const cima = $("#palpebra-cima"), baixo = $("#palpebra-baixo"), cilios = $("#olho-cilios");
+  const dicaTexto = $("#dica-texto"), dicaExtra = $("#dica-extra");
+  const CURSO = 0.95; // quanto o olho anda no trilho, em em
+  let aberto = false, abertura = 0, alvoAbertura = 0, humorAte = 0, humor = 0;
+  let mouse = null, ultimoMov = 0, olharAleatorio = { x: 0, y: 0, ate: 0 };
+  let proxPiscada = 0, piscando = -1e9, ix = 0, iy = 0, rodando = false;
+  let posicao = 0, arrasto = null, arrastou = false, acoes = null, alvoExterno = null;
+
+  const dica = (texto, extra = "") => { dicaTexto.textContent = texto; dicaExtra.textContent = extra; };
+  function aplicarPalpebras(a) {               // a: 0 fechado … 1 aberto
+    cima.setAttribute("transform", `translate(0 ${-48 * a})`);
+    baixo.setAttribute("transform", `translate(0 ${46 * a})`);
+  }
+  function quadro(t) {
+    abertura += (alvoAbertura - abertura) * (reduzirMovimento.matches ? 1 : 0.18);
+    let a = abertura;
+    if (aberto && t > proxPiscada) { piscando = t; proxPiscada = t + 2500 + Math.random() * 4000; }
+    if (aberto && t - piscando < 160) a *= Math.abs((t - piscando) / 80 - 1);
+    if (t < humorAte) a = Math.min(a, humor);
+    aplicarPalpebras(a);
+    dentro.style.opacity = abertura > 0.02 || aberto ? 1 : 0;
+    cilios.style.opacity = Math.max(0, Math.min(1, abertura * 1.3));
+
+    const r = btn.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    let dx, dy;
+    if (alvoExterno) { const p = alvoExterno(); dx = p.x - cx; dy = p.y - cy; }
+    else if (mouse && t - ultimoMov < 4000) { dx = mouse.x - cx; dy = mouse.y - cy; }
+    else {
+      if (t > olharAleatorio.ate) olharAleatorio = { x: (Math.random() - .5) * 400, y: (Math.random() - .5) * 200, ate: t + 900 + Math.random() * 1600 };
+      dx = olharAleatorio.x; dy = olharAleatorio.y;
+    }
+    const dist = Math.hypot(dx, dy) || 1, alcance = Math.min(1, dist / 220);
+    const tx = (dx / dist) * 13 * alcance, ty = (dy / dist) * 12 * alcance;
+    ix += (tx - ix) * 0.25; iy += (ty - iy) * 0.25;
+    iris.setAttribute("transform", `translate(${ix.toFixed(2)} ${iy.toFixed(2)})`);
+
+    if (aberto || abertura > 0.01) requestAnimationFrame(quadro);
+    else { dentro.style.opacity = 0; rodando = false; }
+  }
+  const iniciar = () => { if (!rodando) { rodando = true; requestAnimationFrame(quadro); } };
+
+  function posicionar(frac, animado = true) {
+    posicao = frac;
+    btn.classList.toggle("arrastando", !animado);
+    btn.style.transform = frac > 0 ? `translateX(${(frac * CURSO).toFixed(3)}em)` : "";
+  }
+  function abrir() {
+    if (aberto) return;
+    aberto = true; alvoAbertura = 1; proxPiscada = performance.now() + 2200;
+    interruptor.classList.add("aberto");
+    btn.setAttribute("aria-pressed", "true"); btn.setAttribute("aria-label", "Fechar o olho do O");
+    dica("ele está de olho no seu código", "psiu… arraste ele para o lado");
+    iniciar();
+  }
+  function fechar() {
+    if (acoes?.ativo()) acoes.desligar();
+    aberto = false; alvoAbertura = 0;
+    interruptor.classList.remove("aberto"); posicionar(0);
+    btn.setAttribute("aria-pressed", "false"); btn.setAttribute("aria-label", "Abrir o olho do O");
+    dica("clique no O");
+    iniciar();
+  }
+
+  /* arrastar o olho no trilho, como um interruptor */
+  btn.addEventListener("pointerdown", e => {
+    arrastou = false;
+    if (!aberto || e.button !== 0) return;
+    arrasto = { x0: e.clientX, p0: posicao, id: e.pointerId, em: parseFloat(getComputedStyle(btn).fontSize) };
+    btn.setPointerCapture(e.pointerId);
+  });
+  btn.addEventListener("pointermove", e => {
+    if (!arrasto || e.pointerId !== arrasto.id) return;
+    const dx = e.clientX - arrasto.x0;
+    if (!arrastou && Math.abs(dx) < 6) return;
+    arrastou = true;
+    posicionar(Math.max(0, Math.min(1, arrasto.p0 + dx / (arrasto.em * CURSO))), false);
+  });
+  const soltar = () => {
+    if (!arrasto) return;
+    arrasto = null;
+    if (!arrastou) return;
+    const ligar = posicao > 0.55;
+    posicionar(ligar ? 1 : 0);
+    if (ligar && !acoes?.ativo()) acoes?.ligar();
+    else if (!ligar && acoes?.ativo()) acoes.desligar();
+  };
+  btn.addEventListener("pointerup", soltar);
+  btn.addEventListener("pointercancel", soltar);
+  btn.addEventListener("click", () => {
+    if (arrastou) { arrastou = false; return; }
+    aberto ? fechar() : abrir();
+  });
+  btn.addEventListener("keydown", e => {
+    if (!aberto || !acoes) return;
+    if (e.key === "ArrowRight" && !acoes.ativo()) { e.preventDefault(); posicionar(1); acoes.ligar(); }
+    else if (e.key === "ArrowLeft" && acoes.ativo()) { e.preventDefault(); posicionar(0); acoes.desligar(); }
+  });
+
+  const mover = e => { mouse = { x: e.clientX, y: e.clientY }; ultimoMov = performance.now(); };
+  addEventListener("pointermove", mover, { passive: true });
+  addEventListener("pointerdown", mover, { passive: true });
+  addEventListener("focusin", e => {
+    const r = e.target.getBoundingClientRect?.();
+    if (r && r.width) { mouse = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; ultimoMov = performance.now(); }
+  });
+
+  return {
+    abrir, posicionar, dica,
+    get aberto() { return aberto; },
+    set alvo(f) { alvoExterno = f; },
+    conectar(a) { acoes = a; },
+    reagir(tipo) {
+      if (!aberto) return;
+      const t = performance.now();
+      if (tipo === "feliz") { piscando = t; setTimeout(() => { piscando = performance.now(); }, 220); }
+      else { humor = 0.42; humorAte = t + 1100; }
+    },
+  };
+})();
+
+/* ================================================================ modo história de ninar */
+const ninar = (() => {
+  const irisOlho = $("#olho-iris"), TAU = Math.PI * 2;
+  let ativo = false, telas = null, raf = 0, particulas = [], dpr = 1, inicio = 0;
+  const luz = { x: innerWidth / 2, y: innerHeight / 2 };
+  let alvo = null, ultimoToque = 0;
+  const raio = () => Math.round(Math.max(140, Math.min(Math.min(innerWidth, innerHeight) * 0.34, 280)));
+  const aoMover = e => { alvo = { x: e.clientX, y: e.clientY }; ultimoToque = performance.now(); };
+  const aoTocar = e => { const t = e.touches[0]; if (t) { alvo = { x: t.clientX, y: t.clientY }; ultimoToque = performance.now(); } };
+  const aoTeclar = e => { if (e.key === "Escape") desligar(); };
+
+  function ajustar() {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    for (const t of Object.values(telas)) {
+      t.el.width = Math.round(innerWidth * dpr); t.el.height = Math.round(innerHeight * dpr);
+      t.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+  function criarPoeira() {
+    particulas = Array.from({ length: 110 }, () => ({
+      x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+      vx: (Math.random() - .5) * .14, vy: (Math.random() - .5) * .1 - .04,
+      r: .5 + Math.random() * 1.7, fase: Math.random() * TAU,
+    }));
+  }
+
+  /* o feixe sai da pupila e encosta, pelas tangentes, no círculo iluminado */
+  function feixe(r) {
+    const b = irisOlho.getBoundingClientRect();
+    const ex = b.left + b.width / 2, ey = b.top + b.height / 2, tam = b.width;
+    const dx = luz.x - ex, dy = luz.y - ey, d = Math.hypot(dx, dy);
+    if (d <= r * 1.05) return { ex, ey, d, tam, cone: false };
+    const th = Math.atan2(dy, dx), al = Math.asin(r / d), t = Math.sqrt(d * d - r * r);
+    const ab = Math.max(3, tam * 0.22);              // abertura na saída do olho
+    const px = -Math.sin(th), py = Math.cos(th);
+    return {
+      ex, ey, d, th, al, ab, tam, cone: true,
+      e1: [ex + px * ab, ey + py * ab], e2: [ex - px * ab, ey - py * ab],
+      t1: [ex + t * Math.cos(th + al), ey + t * Math.sin(th + al)],
+      t2: [ex + t * Math.cos(th - al), ey + t * Math.sin(th - al)],
+    };
+  }
+  const norm = a => ((a % TAU) + TAU) % TAU;
+  /* cone e círculo num contorno só: uma forma, um gradiente, nenhuma emenda */
+  function formaDaLuz(ctx, f, r) {
+    ctx.beginPath();
+    if (!f.cone) { ctx.arc(luz.x, luz.y, r, 0, TAU); return; }
+    const a1 = Math.atan2(f.t1[1] - luz.y, f.t1[0] - luz.x), a2 = Math.atan2(f.t2[1] - luz.y, f.t2[0] - luz.x);
+    const horario = norm(f.th - a1) < norm(a2 - a1);   // contorna pelo lado de longe do olho
+    ctx.moveTo(...f.e1); ctx.lineTo(...f.t1);
+    ctx.arc(luz.x, luz.y, r, a1, a2, !horario);
+    ctx.lineTo(...f.e2); ctx.closePath();
+  }
+  /* a mesma régua de intensidade vale para o cone e para o círculo */
+  function gradiente(ctx, f, r, paradas) {
+    const R = Math.max(r * 1.2, f.d + f.tam), k = r / R;
+    const g = ctx.createRadialGradient(luz.x, luz.y, 0, luz.x, luz.y, R);
+    paradas(k).forEach(([pos, cor]) => g.addColorStop(Math.min(1, Math.max(0, pos)), cor));
+    return g;
+  }
+  function noFeixe(x, y, f, r) {
+    let v = Math.max(0, 1 - Math.hypot(x - luz.x, y - luz.y) / (r * 1.05));
+    if (f.cone) {
+      const qx = x - f.ex, qy = y - f.ey;
+      const ao = qx * Math.cos(f.th) + qy * Math.sin(f.th);
+      const lado = Math.abs(-qx * Math.sin(f.th) + qy * Math.cos(f.th));
+      const meia = f.ab + ao * Math.tan(f.al);
+      if (ao > 0 && ao < f.d && lado < meia) v = Math.max(v, (0.35 + 0.35 * ao / f.d) * (1 - lado / meia));
+    }
+    return v;
+  }
+
+  function desenhar(t, r) {
+    const W = innerWidth, H = innerHeight, f = feixe(r), borda = 30 * dpr;
+
+    // 1. escuridão com a forma da luz recortada, de borda macia
+    const ce = telas.escuro.ctx;
+    ce.globalCompositeOperation = "source-over"; ce.shadowBlur = 0;
+    ce.clearRect(0, 0, W, H);
+    ce.fillStyle = "rgba(5, 6, 10, .965)"; ce.fillRect(0, 0, W, H);
+    ce.globalCompositeOperation = "destination-out";
+    ce.shadowColor = "#000"; ce.shadowBlur = borda;
+    ce.fillStyle = gradiente(ce, f, r, k => [[0, "rgba(0,0,0,1)"], [k * .6, "rgba(0,0,0,1)"], [k, "rgba(0,0,0,.92)"], [1, "rgba(0,0,0,.5)"]]);
+    formaDaLuz(ce, f, r); ce.fill();
+    ce.shadowBlur = 0;
+
+    // 2. tom amarelado, com exatamente a mesma forma e a mesma régua
+    const cl = telas.luz.ctx;
+    cl.clearRect(0, 0, W, H);
+    cl.shadowColor = "rgba(255, 182, 84, .45)"; cl.shadowBlur = borda;
+    cl.fillStyle = gradiente(cl, f, r, k => [[0, "rgba(255, 201, 112, .52)"], [k * .6, "rgba(255, 193, 98, .44)"], [k, "rgba(255, 185, 88, .34)"], [1, "rgba(255, 178, 78, .22)"]]);
+    formaDaLuz(cl, f, r); cl.fill();
+    cl.shadowBlur = 0;
+
+    // 3. brilho na saída do olho, as duas linhas do feixe e a poeira
+    const cp = telas.poeira.ctx;
+    cp.clearRect(0, 0, W, H);
+    const halo = cp.createRadialGradient(f.ex, f.ey, 0, f.ex, f.ey, f.tam * 1.4);
+    halo.addColorStop(0, "rgba(255, 214, 140, .38)"); halo.addColorStop(1, "rgba(255, 214, 140, 0)");
+    cp.fillStyle = halo; cp.beginPath(); cp.arc(f.ex, f.ey, f.tam * 1.4, 0, TAU); cp.fill();
+    if (f.cone) {
+      cp.lineWidth = 1.3; cp.lineCap = "round";
+      for (const [a, b] of [[f.e1, f.t1], [f.e2, f.t2]]) {
+        const g = cp.createLinearGradient(a[0], a[1], b[0], b[1]);
+        g.addColorStop(0, "rgba(255, 208, 122, .7)"); g.addColorStop(1, "rgba(255, 208, 122, .04)");
+        cp.strokeStyle = g; cp.beginPath(); cp.moveTo(...a); cp.lineTo(...b); cp.stroke();
+      }
+    }
+    const flutuar = !reduzirMovimento.matches;
+    for (const p of particulas) {
+      if (flutuar) {
+        p.x += p.vx + Math.sin(t / 1300 + p.fase) * .16;
+        p.y += p.vy + Math.cos(t / 1700 + p.fase) * .1;
+        if (p.x < -6) p.x = W + 6; else if (p.x > W + 6) p.x = -6;
+        if (p.y < -6) p.y = H + 6; else if (p.y > H + 6) p.y = -6;
+      }
+      const v = noFeixe(p.x, p.y, f, r);
+      if (!v) continue;
+      const cintila = .55 + .45 * Math.sin(t / 650 + p.fase * 3);
+      cp.fillStyle = `rgba(255, 230, 175, ${(v * v * cintila * .95).toFixed(3)})`;
+      cp.beginPath(); cp.arc(p.x, p.y, p.r, 0, TAU); cp.fill();
+    }
+  }
+
+  function quadro(t) {
+    let tx, ty;
+    if (alvo && t - ultimoToque < 3500) { tx = alvo.x; ty = alvo.y; }
+    else { // sem ponteiro, a lanterna passeia devagar pelo meio da tela
+      tx = innerWidth / 2 + Math.sin(t / 2300) * innerWidth * .12;
+      ty = innerHeight * .55 + Math.sin(t / 1700) * innerHeight * .1;
+    }
+    const k = reduzirMovimento.matches ? 1 : .12;
+    luz.x += (tx - luz.x) * k; luz.y += (ty - luz.y) * k;
+    const cresce = reduzirMovimento.matches ? 1 : 1 - Math.pow(1 - Math.min(1, (t - inicio) / 1100), 3);
+    desenhar(t, Math.max(4, raio() * cresce));
+    raf = requestAnimationFrame(quadro);
+  }
+
+  function ligar() {
+    if (ativo) return;
+    ativo = true;
+    olho.abrir(); olho.posicionar(1);
+    document.documentElement.classList.add("ninar");
+    const nova = cls => { const c = el("canvas", { class: "camada-noite " + cls, "aria-hidden": "true" }); return { el: c, ctx: c.getContext("2d") }; };
+    telas = { luz: nova("luz"), escuro: nova("escuro"), poeira: nova("poeira") };
+    document.body.append(telas.luz.el, telas.escuro.el, telas.poeira.el);
+    ajustar(); criarPoeira();
+    const io = irisOlho.getBoundingClientRect();         // a luz nasce dentro do olho
+    luz.x = io.left + io.width / 2; luz.y = io.top + io.height / 2;
+    inicio = performance.now(); alvo = null;
+    olho.alvo = () => luz;
+    olho.dica("shh… hora da história", "arraste o olho de volta para acordar");
+    addEventListener("pointermove", aoMover, { passive: true });
+    addEventListener("pointerdown", aoMover, { passive: true });
+    addEventListener("touchmove", aoTocar, { passive: true });
+    addEventListener("resize", ajustar);
+    document.addEventListener("keydown", aoTeclar);
+    raf = requestAnimationFrame(quadro);
+    if (!reduzirMovimento.matches) Object.values(telas).forEach(t => t.el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, easing: "ease-in" }));
+    if (rotaAtual !== "historia") irPara("historia");
+    avisar("Modo história de ninar ligado. A tela escureceu e o olho virou lanterna. Aperte Esc para acordar.");
+  }
+  function desligar(navegar = true) {
+    if (!ativo) return;
+    ativo = false;
+    cancelAnimationFrame(raf);
+    removeEventListener("pointermove", aoMover); removeEventListener("pointerdown", aoMover);
+    removeEventListener("touchmove", aoTocar); removeEventListener("resize", ajustar);
+    document.removeEventListener("keydown", aoTeclar);
+    olho.alvo = null; olho.posicionar(0);
+    olho.dica("ele está de olho no seu código", "psiu… arraste ele para o lado");
+    document.documentElement.classList.remove("ninar");
+    const saindo = Object.values(telas).map(t => t.el); telas = null;
+    if (reduzirMovimento.matches) saindo.forEach(c => c.remove());
+    else saindo.forEach(c => c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 450, easing: "ease-out" }).finished.then(() => c.remove()));
+    if (navegar && rotaAtual === "historia") irPara("inicio");
+    avisar("Luzes acesas.");
+  }
+  return { ligar, desligar, get ativo() { return ativo; } };
+})();
+olho.conectar({ ligar: () => ninar.ligar(), desligar: () => ninar.desligar(), ativo: () => ninar.ativo });
+
+/* ================================================================ transições */
+const transicao = $("#transicao"), tsvg = $("#transicao-svg"), pagina = $("#pagina");
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+  const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = t => ((ax * t + bx) * t + cx) * t, sy = t => ((ay * t + by) * t + cy) * t;
+  const dx = t => (3 * ax * t + 2 * bx) * t + cx;
+  return x => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++) { const d = dx(t); if (Math.abs(d) < 1e-6) break; t -= (sx(t) - x) / d; }
+    return sy(Math.min(1, Math.max(0, t)));
+  };
+}
+/* cada curva é desenhada no ritmo do próprio crescimento */
+const RITMO = {
+  constante: bezier(0, 0, 1, 1), logaritmica: bezier(.12, .85, .3, 1), linear: bezier(.42, 0, .58, 1),
+  linearitmica: bezier(.4, 0, .65, 1), quadratica: bezier(.55, 0, .8, .6), exponencial: bezier(.8, 0, .95, .5),
+};
+const suave = bezier(.42, 0, .58, 1);
+let ocupado = false;
+
+function tracar(itens, duracao) {           // desenha as curvas com uma ponta de caneta na frente
+  return new Promise(fim => {
+    const t0 = performance.now();
+    const passo = agora => {
+      let pronto = true;
+      for (const it of itens) {
+        const x = Math.min(1, Math.max(0, (agora - t0 - it.atraso) / duracao));
+        const p = it.ritmo(x);
+        it.caminho.style.strokeDashoffset = String(1 - p);
+        if (it.ponta) {
+          const pt = it.caminho.getPointAtLength(p * it.comprimento);
+          it.ponta.setAttribute("transform", `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`);
+          it.ponta.style.opacity = x > 0 && x < 1 ? 1 : 0;
+        }
+        if (x < 1) pronto = false;
+      }
+      pronto ? fim() : requestAnimationFrame(passo);
+    };
+    requestAnimationFrame(passo);
+  });
+}
+async function revelarDe(x, y, duracao = 460) {   // abre a nova tela num círculo a partir de (x, y)
+  const r = pagina.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+  const px = x - r.left, py = y - r.top;
+  const raio = Math.hypot(Math.max(x, W - x), Math.max(y, H - y)) + 40;
+  pagina.classList.add("revelando");
+  await pagina.animate(
+    [{ clipPath: `circle(0px at ${px}px ${py}px)` }, { clipPath: `circle(${raio}px at ${px}px ${py}px)` }],
+    { duration: duracao, easing: "cubic-bezier(.22, .8, .2, 1)" }
+  ).finished;
+  pagina.classList.remove("revelando");
+  transicao.classList.remove("ativa");
+  tsvg.replaceChildren();
+}
+async function cobrir() {
+  transicao.classList.add("ativa");
+  await transicao.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: "ease-out" }).finished;
+}
+
+async function animarAte(rota, classesAlvo) {
+  if (reduzirMovimento.matches || !tsvg.animate) { irPara(rota); return; }
+  ocupado = true;
+  try {
+    const W = innerWidth, H = innerHeight;
+    const m = Math.max(28, Math.min(W, H) * 0.09);
+    const ox = m, oy = H - m, pw = W - 2 * m, ph = H - 2 * m;
+    tsvg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    tsvg.replaceChildren();
+    const eixos = svg("path", { class: "eixo", d: `M${ox} ${m * 0.5} V${oy} H${W - m * 0.5}`, pathLength: "1", "stroke-dasharray": "1", "stroke-dashoffset": "1" });
+    tsvg.append(eixos);
+    const unica = classesAlvo.length === 1;
+    const itens = classesAlvo.map((c, i) => {
+      const pts = pontosCurva(c, pw, ph, 220, c.id === "exponencial" ? 0.35 : 0).map(([x, y]) => [ox + x, oy - ph + y]);
+      const caminho = svg("path", { class: "curva", d: caminho_(pts), pathLength: "1", "stroke-dasharray": "1", "stroke-dashoffset": "1" });
+      tsvg.append(caminho);
+      let ponta = null;
+      if (unica) {
+        ponta = svg("g", { class: "ponta", style: "opacity:0" }, [svg("circle", { r: 18, class: "ponta-halo" }), svg("circle", { r: 7 })]);
+        tsvg.append(ponta);
+      }
+      return { c, caminho, ponta, comprimento: caminho.getTotalLength(), fim: pts[pts.length - 1],
+        ritmo: unica ? RITMO[c.id] : suave, atraso: unica ? 120 : 60 + i * 45 };
+    });
+
+    await cobrir();
+    eixos.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 240, fill: "forwards", easing: "ease-out" });
+    await tracar(itens, unica ? 640 : 560);
+
+    let [fx, fy] = unica ? itens[0].fim : [W / 2, H / 2];
+    fy = Math.max(fy, 8);
+    if (unica) {
+      const esquerda = fx > W - 170;
+      const tam = Math.max(28, Math.min(W, H) * 0.07);
+      const t = svg("text", { x: esquerda ? fx - 10 : fx + 16, y: fy > tam * 2.2 ? fy - tam * 0.7 : fy + tam * 1.3, "text-anchor": esquerda ? "end" : "start", "font-size": tam });
+      t.textContent = itens[0].c.rot;
+      tsvg.append(t);
+      await t.animate([{ opacity: 0, transform: "translateY(10px) scale(.9)" }, { opacity: 1, transform: "none" }], { duration: 200, easing: "cubic-bezier(.2,1.5,.4,1)" }).finished;
+    }
+    irPara(rota, true);
+    await revelarDe(fx, fy);
+  } finally { ocupado = false; }
+}
+async function animarInicio() {          // a página inicial se abre a partir do olho
+  if (reduzirMovimento.matches || !pagina.animate) { irPara("inicio"); return; }
+  ocupado = true;
+  try {
+    tsvg.replaceChildren();
+    await cobrir();
+    irPara("inicio");
+    const b = $("#olho-btn").getBoundingClientRect();
+    await revelarDe(b.left + b.width / 2, b.top + b.height * .6, 560);
+    olho.reagir("feliz");
+  } finally { ocupado = false; }
+}
+
+/* ================================================================ roteamento */
+let rotaAtual = null;
+const limpezas = [];
+const aoSair = f => limpezas.push(f);
+const app = $("#app"), topo = $("#topo");
+
+function rotaDoHash() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  return h === "desafio" || POR_ID[h] || (h === "historia" && ninar.ativo) ? h : "inicio";
+}
+function irPara(rota, focar = true) {
+  limpezas.splice(0).forEach(f => f());
+  if (rota !== "historia" && ninar.ativo) ninar.desligar(false);
+  rotaAtual = rota;
+  if (location.hash.slice(1) !== rota) history.pushState(null, "", "#" + rota);
+  topo.dataset.modo = rota === "inicio" || rota === "historia" ? "hero" : "compacto";
+  scrollTo(0, 0);
+  if (rota === "inicio") telaInicio();
+  else if (rota === "desafio") telaDesafio();
+  else if (rota === "historia") telaHistoria();
+  else telaModulo(POR_ID[rota]);
+  if (focar) app.focus({ preventScroll: true });
+}
+
+document.addEventListener("click", e => {
+  const a = e.target.closest("a[href^='#']");
+  if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const destino = a.getAttribute("href").slice(1);
+  const rota = destino === "desafio" || POR_ID[destino] ? destino : destino === "inicio" ? "inicio" : null;
+  if (!rota) return;
+  e.preventDefault();
+  if (ocupado || rota === rotaAtual) return;
+  if (POR_ID[rota]) animarAte(rota, [POR_ID[rota]]);
+  else if (rota === "desafio") animarAte(rota, CLASSES);
+  else animarInicio();
+});
+addEventListener("popstate", () => { const r = rotaDoHash(); if (r !== rotaAtual && !ocupado) irPara(r); });
+
+/* ================================================================ tela inicial */
+function telaInicio() {
+  document.title = "Big O: guia interativo";
+  app.replaceChildren(el("div", { class: "coluna" }, [
+    el("h1", { class: "sr", text: "Big O: guia interativo" }),
+    el("p", { class: "subtitulo", text: "Um guia rápido para entender quanto custa o seu código quando a quantidade de dados cresce." }),
+
+    el("h2", { text: "Em um minuto" }),
+    el("div", { class: "resumo" }, [
+      el("div", {}, [el("h3", { text: "O que é" }),
+        el("p", { text: "Big O é a forma de dizer como o trabalho de um algoritmo cresce conforme a entrada aumenta. Ele não mede segundos: mede o ritmo." })]),
+      el("div", {}, [el("h3", { text: "Por que importa" }),
+        el("p", { text: "Com 10 itens, qualquer código parece rápido. Com 1 milhão, um O(n²) pode levar minutos, enquanto um O(n log n) termina num piscar de olhos." })]),
+      el("div", {}, [el("h3", { text: "Como simplificar" }),
+        el("p", { text: "Constantes somem, então O(2n) vira O(n). Só o termo que mais cresce fica, então O(n² + n) vira O(n²). Laços em sequência se somam e laços aninhados se multiplicam." })]),
+    ]),
+
+    el("h2", { text: "Os módulos" }),
+    el("p", { class: "apoio leitura", text: "Seis classes, da mais rápida para a mais lenta. Cada módulo tem analogia, exemplo de código, uma demonstração para mexer e um teste rápido." }),
+    el("ul", { class: "modulos" }, CLASSES.map(c => el("li", {}, el("a", { class: "modulo", href: "#" + c.id }, [
+      plot(c),
+      el("div", {}, [el("span", { class: "rotulo", text: c.rot }), el("span", { class: "nome", text: c.nome })]),
+      el("p", { text: c.frase }),
+    ])))),
+
+    el("section", { class: "chamada-desafio" }, [
+      el("div", {}, [el("h2", { text: "Desafio" }), el("p", { class: "apoio", text: "10 funções fáceis sorteadas. Você diz a complexidade de cada uma." })]),
+      el("a", { class: "botao", href: "#desafio", text: "Começar desafio" }),
+    ]),
+  ]));
+}
+
+/* ================================================================ módulos */
+function telaModulo(c) {
+  document.title = `${c.rot} ${c.nome} | Big O`;
+  const i = CLASSES.indexOf(c), ant = CLASSES[i - 1], prox = CLASSES[i + 1];
+  app.replaceChildren(el("div", { class: "coluna" }, [
+    el("div", { class: "mod-topo" }, [
+      el("div", {}, [
+        el("h1", {}, [el("span", { class: "grande", text: c.rot }), el("span", { class: "nome", text: c.nome })]),
+        el("p", { class: "frase", text: c.frase }),
+      ]),
+      plot(c, { w: 520, h: 300 }),
+    ]),
+    el("div", { class: "leitura" }, [
+      el("h2", { text: "Para entender" }),
+      el("p", { text: c.analogia }),
+      el("h2", { text: "Como reconhecer no código" }),
+      el("ul", { class: "sinais" }, c.sinais.map(s => el("li", { text: s }))),
+      el("h2", { text: "Exemplo" }),
+      el("pre", {}, el("code", { text: c.codigo })),
+      el("p", { text: c.nota }),
+      el("h2", { text: "Mexa você mesmo" }),
+      demo(c),
+      c.id === "quadratica" ? el("p", { class: "apoio", style: "margin-top:1rem" }, ["Quer ver o Bubble Sort, outro O(n²), perdendo uma corrida? ", el("a", { href: "#linearitmica", text: "Abra o módulo O(n log n)" }), "."]) : null,
+      el("h2", { text: "Acerte esta" }),
+      testeRapido(c),
+    ]),
+    el("nav", { class: "mod-nav", "aria-label": "Outros módulos" }, [
+      ant ? el("a", { href: "#" + ant.id }, [el("span", { text: "Módulo anterior" }), `${ant.rot} ${ant.nome}`]) : el("a", { href: "#inicio" }, [el("span", { text: "Voltar" }), "Início"]),
+      prox ? el("a", { href: "#" + prox.id, style: "text-align:right" }, [el("span", { text: "Próximo módulo" }), `${prox.rot} ${prox.nome}`])
+           : el("a", { href: "#desafio", style: "text-align:right" }, [el("span", { text: "Agora é com você" }), "Fazer o desafio"]),
+    ]),
+  ]));
+}
+
+function testeRapido(c) {
+  const t = c.teste, caixa = el("div", { class: "correcao", "aria-live": "polite" });
+  const botoes = t.ops.map((op, k) => el("button", { class: "opcao", type: "button", onclick: () => {
+    botoes.forEach((b, j) => { b.disabled = true; if (j === t.certa) b.classList.add("certa"); else if (j === k) b.classList.add("errada"); });
+    const ok = k === t.certa;
+    olho.reagir(ok ? "feliz" : "desconfiado");
+    caixa.className = "correcao " + (ok ? "ok" : "erro");
+    caixa.replaceChildren(el("span", { class: "caneta", text: ok ? "Certo!" : "Quase!" }), el("p", { text: t.exp }),
+      el("button", { class: "botao secundario", type: "button", text: "Tentar de novo", onclick: () => { botoes.forEach(b => { b.disabled = false; b.classList.remove("certa", "errada"); }); caixa.replaceChildren(); } }));
+  } }, el("pre", {}, el("code", { text: op }))));
+  return el("div", {}, [el("p", { class: "enunciado", text: t.q }), el("ul", { class: "opcoes" }, botoes.map(b => el("li", {}, b))), caixa]);
+}
+
+/* ---------- demonstrações ---------- */
+function demo(c) {
+  if (c.id === "linearitmica") return el("div", {}, [
+    el("h3", { text: "Merge Sort, passo a passo" }), el("div", { class: "demo" }, demoMergeVisual()),
+    el("h3", { text: "Corrida de ordenação" }), el("div", { class: "demo" }, demoCorrida()),
+  ]);
+  const fabricas = { constante: demoConstante, logaritmica: demoLog, linear: demoLinear, quadratica: demoQuadratica, exponencial: demoExponencial };
+  return el("div", { class: "demo" }, fabricas[c.id]());
+}
+
+function demoConstante() {
+  const tamanhos = [10, 100, 1000, 10000, 100000, 1000000];
+  const saida = el("output", { text: "1.000" });
+  const caixas = el("div", { class: "caixas", "aria-hidden": "true" });
+  const placar = el("p", { class: "placar", "aria-live": "polite", text: "Passos: 0" });
+  const desenhar = () => {
+    const n = tamanhos[+slider.value];
+    saida.textContent = fmt.format(n);
+    caixas.replaceChildren(...[0, 1, 2, 3, 4, 5].map(k => el("span", { class: "caixa", text: String(k) })), el("span", { class: "caixa", text: "…" }), el("span", { class: "caixa", text: fmt.format(n - 1) }));
+    placar.textContent = "Passos: 0";
+  };
+  const slider = el("input", { type: "range", min: 0, max: 5, value: 2, "aria-label": "Tamanho da lista", oninput: desenhar });
+  desenhar();
+  return [
+    el("label", {}, ["Lista com ", saida, " itens"]), slider, caixas, placar,
+    el("div", { class: "linha-botoes" }, el("button", { class: "botao", type: "button", text: "Acessar lista[0]", onclick: () => {
+      caixas.firstChild.classList.add("achou"); placar.textContent = "Passos: 1. Mude o tamanho e tente de novo: continua 1.";
+    } })),
+  ];
+}
+
+function demoLog() {
+  let ini, fim, chute, tentativas;
+  const numero = el("p", { class: "chute", "aria-live": "polite" });
+  const faixa = el("i"), info = el("p", { class: "apoio" });
+  const botoes = el("div", { class: "linha-botoes" });
+  const reiniciar = () => { ini = 1; fim = 100; tentativas = 0; proximo(); };
+  const proximo = () => {
+    if (ini > fim) { numero.textContent = "?"; info.textContent = "Hmm, as respostas se contradizem. Alguém mudou de número no meio do caminho!"; montar(false); return; }
+    chute = Math.floor((ini + fim) / 2); tentativas++;
+    numero.textContent = String(chute);
+    faixa.style.left = ((ini - 1) / 100 * 100) + "%"; faixa.style.width = ((fim - ini + 1) / 100 * 100) + "%";
+    info.textContent = `Tentativa ${tentativas}. Ainda sobram ${fim - ini + 1} números possíveis.`;
+    montar(true);
+  };
+  const montar = jogando => botoes.replaceChildren(...(jogando ? [
+    el("button", { class: "botao secundario", type: "button", text: "É menor", onclick: () => { fim = chute - 1; proximo(); } }),
+    el("button", { class: "botao secundario", type: "button", text: "É maior", onclick: () => { ini = chute + 1; proximo(); } }),
+    el("button", { class: "botao", type: "button", text: "Acertou!", onclick: () => {
+      info.textContent = `Achei em ${tentativas} ${tentativas === 1 ? "tentativa" : "tentativas"}. Com 1 milhão de números, seriam no máximo 20.`;
+      olho.reagir("feliz"); montar(false);
+    } }),
+  ] : [el("button", { class: "botao", type: "button", text: "Jogar de novo", onclick: reiniciar })]));
+  reiniciar();
+  return [el("p", { text: "Pense num número de 1 a 100. Eu chuto sempre no meio do que sobrou." }), numero, el("div", { class: "faixa", "aria-hidden": "true" }, faixa), info, botoes];
+}
+
+function demoLinear() {
+  let timer = null;
+  const caixas = el("div", { class: "caixas", "aria-hidden": "true" });
+  const placar = el("p", { class: "placar", "aria-live": "polite" });
+  const botoes = el("div", { class: "linha-botoes" });
+  let valores, alvo;
+  const nova = () => {
+    clearTimeout(timer);
+    valores = embaralhar(Array.from({ length: 98 }, (_, k) => k + 1)).slice(0, 14);
+    alvo = Math.random() < 0.75 ? valores[Math.floor(Math.random() * valores.length)] : embaralhar(Array.from({ length: 98 }, (_, k) => k + 1).filter(v => !valores.includes(v)))[0];
+    caixas.replaceChildren(...valores.map(v => el("span", { class: "caixa", text: String(v) })));
+    placar.textContent = `Procurando o ${alvo}. Comparações: 0`;
+    botoes.replaceChildren(
+      el("button", { class: "botao", type: "button", text: `Procurar o ${alvo}`, onclick: procurar }),
+      el("button", { class: "botao secundario", type: "button", text: "Embaralhar", onclick: nova }));
+  };
+  const procurar = () => {
+    botoes.firstChild.disabled = true;
+    let k = 0;
+    const passo = () => {
+      [...caixas.children].forEach((cx, j) => cx.classList.toggle("olhando", j === k));
+      placar.textContent = `Procurando o ${alvo}. Comparações: ${k + 1}`;
+      if (valores[k] === alvo) { caixas.children[k].classList.replace("olhando", "achou"); placar.textContent = `Achei o ${alvo} depois de ${k + 1} comparações.`; return; }
+      caixas.children[k].classList.add("descartada");
+      k++;
+      if (k >= valores.length) { placar.textContent = `O ${alvo} não está na lista. Foram ${valores.length} comparações: o pior caso, olhar tudo.`; return; }
+      timer = setTimeout(passo, reduzirMovimento.matches ? 0 : 160);
+    };
+    passo();
+  };
+  nova();
+  aoSair(() => clearTimeout(timer));
+  return [el("p", { text: "A lista está bagunçada, então o jeito é olhar um por um." }), caixas, placar, botoes];
+}
+
+function demoQuadratica() {
+  const roda = svg("svg", { class: "roda", viewBox: "0 0 240 240", "aria-hidden": "true" });
+  const saida = el("output"), placar = el("p", { class: "placar", "aria-live": "polite" });
+  const desenhar = () => {
+    const n = +slider.value, pts = Array.from({ length: n }, (_, k) => {
+      const ang = -Math.PI / 2 + (2 * Math.PI * k) / n;
+      return [120 + 95 * Math.cos(ang), 120 + 95 * Math.sin(ang)];
+    });
+    roda.replaceChildren();
+    for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++)
+      roda.append(svg("line", { x1: pts[a][0], y1: pts[a][1], x2: pts[b][0], y2: pts[b][1] }));
+    pts.forEach(([x, y]) => roda.append(svg("circle", { cx: x, cy: y, r: 9 })));
+    saida.textContent = String(n);
+    placar.textContent = `${n} pessoas, ${fmt.format(n * (n - 1) / 2)} apertos de mão`;
+  };
+  const slider = el("input", { type: "range", min: 2, max: 16, value: 6, "aria-label": "Quantidade de pessoas", oninput: desenhar });
+  desenhar();
+  return [el("label", {}, [saida, " pessoas na turma"]), slider, roda, placar,
+    el("p", { class: "apoio", text: "Cada linha é um aperto de mão. Repare como as linhas crescem muito mais rápido que as pessoas." })];
+}
+
+function demoExponencial() {
+  const fibs = [0, 1]; for (let k = 2; k <= 42; k++) fibs[k] = fibs[k - 1] + fibs[k - 2];
+  const saida = el("output"), bA = el("i"), bB = el("i"), tA = el("span"), tB = el("span");
+  const conclusao = el("p", { "aria-live": "polite" });
+  const desenhar = () => {
+    const n = +slider.value;
+    const sem = 2 * fibs[n + 1] - 1, com = Math.max(1, 2 * n - 1);
+    const escala = Math.log10(2 * fibs[41] - 1);
+    saida.textContent = String(n);
+    bA.style.width = (Math.log10(sem) / escala * 100) + "%"; bB.style.width = (Math.log10(com) / escala * 100) + "%";
+    tA.textContent = fmt.format(sem) + " chamadas"; tB.textContent = fmt.format(com) + " chamadas";
+    conclusao.textContent = n >= 35 ? "Sem cache, isso já leva dezenas de segundos em Python. Com cache, é instantâneo."
+      : n >= 25 ? "Repare: cada n a mais quase dobra as chamadas sem cache." : "Arraste até 40 e veja a diferença explodir.";
+  };
+  const slider = el("input", { type: "range", min: 1, max: 40, value: 10, "aria-label": "Valor de n", oninput: desenhar });
+  desenhar();
+  return [el("label", {}, ["Calcular fib(", saida, ")"]), slider,
+    el("div", { class: "barras" }, [
+      el("div", {}, [el("div", { class: "barra-rotulo" }, [el("span", { text: "Sem cache, O(2ⁿ)" }), tA]), el("div", { class: "barra" }, bA)]),
+      el("div", {}, [el("div", { class: "barra-rotulo" }, [el("span", { text: "Com @lru_cache, O(n)" }), tB]), el("div", { class: "barra" }, bB)]),
+    ]), el("p", { class: "apoio", text: "As barras estão em escala logarítmica, senão a de cima não caberia na tela." }), conclusao];
+}
+
+/* ---------- Merge Sort passo a passo ---------- */
+function demoMergeVisual() {
+  const N = 8, PROF = 3;
+  let valores = [], quadros = [], qi = 0, timer = null;
+  const linhas = el("div", { class: "ms-linhas", "aria-hidden": "true" });
+  const msg = el("p", { class: "ms-msg", "aria-live": "polite" });
+  const placar = el("p", { class: "placar" });
+  const bTocar = el("button", { class: "botao", type: "button" });
+  const bPasso = el("button", { class: "botao secundario", type: "button", text: "Um passo" });
+  const bNova = el("button", { class: "botao secundario", type: "button", text: "Nova lista" });
+
+  function gerarQuadros() {
+    const rows = [valores.slice(), Array(N).fill(null), Array(N).fill(null), Array(N).fill(null)];
+    const vis = [true, false, false, false];
+    let comps = 0;
+    quadros = [];
+    const foto = (m, extra = {}) => quadros.push({ rows: rows.map(r => r.slice()), vis: vis.slice(), m, comps, ...extra });
+    foto("Lista bagunçada. Primeiro o Merge Sort divide tudo ao meio, até sobrar um número em cada pedaço.");
+    for (let d = 1; d <= PROF; d++) {
+      rows[d] = rows[0].slice(); vis[d] = true;
+      foto(d === PROF ? "Pronto: cada pedaço tem um número só, e um número sozinho já está ordenado. Agora começa a recombinação." : `Dividindo em pedaços de ${N >> d}.`);
+    }
+    (function ms(d, lo, hi) {
+      if (hi - lo <= 1) return;
+      const mid = (lo + hi) >> 1;
+      ms(d + 1, lo, mid); ms(d + 1, mid, hi);
+      const src = rows[d + 1];
+      for (let k = lo; k < hi; k++) rows[d][k] = null;
+      const merge = { d, lo, hi, mid };
+      foto(`Intercalando [${src.slice(lo, mid).join(", ")}] com [${src.slice(mid, hi).join(", ")}].`, { merge });
+      let i = lo, j = mid, k = lo;
+      while (i < mid && j < hi) {
+        comps++;
+        const daEsquerda = src[i] <= src[j], v = daEsquerda ? src[i] : src[j];
+        rows[d][k] = v;
+        foto(`${src[i]} ou ${src[j]}? O menor, ${v}, sobe primeiro.`, { merge, cmp: [d + 1, i, j], pos: [d, k] });
+        daEsquerda ? i++ : j++; k++;
+      }
+      while (i < mid) { rows[d][k] = src[i]; foto(`Sobrou o ${src[i]}: ele sobe direto, sem comparar.`, { merge, pos: [d, k] }); i++; k++; }
+      while (j < hi) { rows[d][k] = src[j]; foto(`Sobrou o ${src[j]}: ele sobe direto, sem comparar.`, { merge, pos: [d, k] }); j++; k++; }
+    })(0, 0, N);
+    foto(`Ordenado! Foram ${comps} comparações. Com 8 itens, n log n dá 24, e o Merge Sort nunca passa desse teto.`, { fim: true });
+  }
+  function desenhar() {
+    const q = quadros[qi];
+    linhas.replaceChildren(...q.rows.map((row, d) => {
+      const tam = N >> d, segs = [];
+      for (let s = 0; s < N; s += tam) {
+        const ativo = q.merge && q.merge.d === d && s >= q.merge.lo && s < q.merge.hi;
+        const fonte = q.merge && q.merge.d + 1 === d && s >= q.merge.lo && s < q.merge.hi;
+        segs.push(el("div", { class: "ms-seg" + (ativo || fonte ? " ativo" : "") }, row.slice(s, s + tam).map((v, o) => {
+          const k = s + o;
+          let cls = "ms-cel";
+          if (v == null) cls += " vazia";
+          if (q.cmp && q.cmp[0] === d && (q.cmp[1] === k || q.cmp[2] === k)) cls += " comparando";
+          if (q.pos && q.pos[0] === d && q.pos[1] === k) cls += " colocado";
+          if (q.fim && d === 0) cls += " ordenado";
+          return el("span", { class: cls, text: v == null ? "·" : String(v) });
+        })));
+      }
+      return el("div", { class: "ms-linha" + (q.vis[d] ? "" : " oculta") }, segs);
+    }));
+    msg.textContent = q.m;
+    placar.textContent = `Passo ${qi + 1} de ${quadros.length} · ${q.comps} comparações`;
+    const acabou = qi === quadros.length - 1;
+    bPasso.disabled = acabou;
+    bTocar.textContent = timer ? "Pausar" : acabou ? "Ver de novo" : qi ? "Continuar" : "Animar";
+    if (q.fim) olho.reagir("feliz");
+  }
+  const parar = () => { clearInterval(timer); timer = null; };
+  const avancar = () => { if (qi < quadros.length - 1) { qi++; desenhar(); } if (qi === quadros.length - 1) { parar(); desenhar(); } };
+  bTocar.addEventListener("click", () => {
+    if (timer) { parar(); desenhar(); return; }
+    if (qi === quadros.length - 1) qi = 0;
+    timer = setInterval(avancar, reduzirMovimento.matches ? 900 : 700);
+    desenhar();
+  });
+  bPasso.addEventListener("click", () => { parar(); avancar(); });
+  bNova.addEventListener("click", () => { parar(); nova(); });
+  function nova() { valores = embaralhar(Array.from({ length: 99 }, (_, k) => k + 1)).slice(0, N); qi = 0; gerarQuadros(); desenhar(); }
+  nova();
+  aoSair(parar);
+  return [
+    el("p", { text: "Oito números, três níveis de divisão (log₂ 8 = 3) e, em cada nível, os oito passam pela recombinação. Por isso n log n." }),
+    linhas, msg, placar, el("div", { class: "linha-botoes" }, [bTocar, bPasso, bNova]),
+  ];
+}
+
+/* ---------- corrida de ordenação ---------- */
+function* bubbleSort(a) {
+  for (let i = 0; i < a.length - 1; i++) {
+    let trocou = false;
+    for (let j = 0; j < a.length - 1 - i; j++) {
+      yield [j, j + 1];
+      if (a[j] > a[j + 1]) { [a[j], a[j + 1]] = [a[j + 1], a[j]]; trocou = true; yield [j, j + 1]; }
+    }
+    if (!trocou) return;
+  }
+}
+function* insertionSort(a) {
+  for (let i = 1; i < a.length; i++) {
+    for (let j = i; j > 0; j--) {
+      yield [j - 1, j];
+      if (a[j - 1] <= a[j]) break;
+      [a[j - 1], a[j]] = [a[j], a[j - 1]]; yield [j - 1, j];
+    }
+  }
+}
+function* selectionSort(a) {
+  for (let i = 0; i < a.length - 1; i++) {
+    let m = i;
+    for (let j = i + 1; j < a.length; j++) { yield [m, j]; if (a[j] < a[m]) m = j; }
+    if (m !== i) { [a[i], a[m]] = [a[m], a[i]]; yield [i, m]; }
+  }
+}
+function* mergeSort(a) {
+  const aux = a.slice();
+  function* ms(lo, hi) {
+    if (hi - lo < 2) return;
+    const mid = (lo + hi) >> 1;
+    yield* ms(lo, mid); yield* ms(mid, hi);
+    for (let k = lo; k < hi; k++) aux[k] = a[k];
+    let i = lo, j = mid;
+    for (let k = lo; k < hi; k++) {
+      if (i < mid && j < hi) yield [i, j];
+      a[k] = j >= hi || (i < mid && aux[i] <= aux[j]) ? aux[i++] : aux[j++];
+      yield [k];
+    }
+  }
+  yield* ms(0, a.length);
+}
+function* quickSort(a) {
+  function* qs(lo, hi) {
+    if (lo >= hi) return;
+    const m = (lo + hi) >> 1;
+    [a[m], a[hi]] = [a[hi], a[m]]; yield [m, hi];
+    let i = lo;
+    for (let j = lo; j < hi; j++) {
+      yield [j, hi];
+      if (a[j] < a[hi]) { [a[i], a[j]] = [a[j], a[i]]; yield [i, j]; i++; }
+    }
+    [a[i], a[hi]] = [a[hi], a[i]]; yield [i, hi];
+    yield* qs(lo, i - 1); yield* qs(i + 1, hi);
+  }
+  yield* qs(0, a.length - 1);
+}
+const ALGORITMOS = [
+  { nome: "Merge Sort", big: "O(n log n)", gen: mergeSort },
+  { nome: "Quick Sort", big: "O(n log n) em média", gen: quickSort },
+  { nome: "Insertion Sort", big: "O(n²)", gen: insertionSort },
+  { nome: "Selection Sort", big: "O(n²)", gen: selectionSort },
+  { nome: "Bubble Sort", big: "O(n²)", gen: bubbleSort },
+];
+
+function demoCorrida() {
+  let n = 40, tipo = "embaralhada", vel = 1, base = [], estados = [], raf = 0, rodando = false, terminados = 0;
+  const resumo = el("p", { "aria-live": "polite" });
+  const bCorrer = el("button", { class: "botao", type: "button" });
+  const linhas = ALGORITMOS.map(alg => {
+    const canvas = el("canvas", { class: "corrida-canvas", "aria-hidden": "true" });
+    const lugar = el("span", { class: "lugar" }), cont = el("span", { class: "mono" });
+    return { alg, canvas, lugar, cont, nodo: el("div", { class: "corrida-linha" }, [
+      el("div", { class: "corrida-cab" }, [el("span", {}, [el("strong", { text: alg.nome }), el("span", { class: "big", text: alg.big })]), el("span", {}, [lugar, cont])]),
+      canvas]) };
+  });
+  const cores = () => {
+    const cs = getComputedStyle(document.documentElement);
+    return { tinta: cs.getPropertyValue("--tinta").trim(), destaque: cs.getPropertyValue("--vermelho").trim(), fim: cs.getPropertyValue("--verde").trim() };
+  };
+  function desenhar(e, c = cores()) {
+    const cv = e.l.canvas, w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
+    if (!w) return;
+    if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const ctx = cv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const bw = w / n, folga = bw > 4 ? 1 : 0;
+    for (let i = 0; i < n; i++) {
+      const bh = (e.a[i] / n) * (h - 6);
+      ctx.fillStyle = e.fim ? c.fim : e.marca && e.marca.includes(i) ? c.destaque : c.tinta;
+      ctx.fillRect(i * bw + folga / 2, h - bh, bw - folga, bh);
+    }
+  }
+  function gerarLista() {
+    const v = Array.from({ length: n }, (_, k) => k + 1);
+    if (tipo === "invertida") return v.reverse();
+    if (tipo === "quase") { for (let k = 0; k < Math.max(2, n / 10); k++) { const i = Math.floor(Math.random() * (n - 1)); [v[i], v[i + 1]] = [v[i + 1], v[i]]; } return v; }
+    return embaralhar(v);
+  }
+  function preparar(novaLista = true) {
+    cancelAnimationFrame(raf); rodando = false; terminados = 0;
+    if (novaLista) base = gerarLista();
+    estados = linhas.map(l => { const a = base.slice(); return { l, a, it: l.alg.gen(a), ops: 0, fim: false, marca: null }; });
+    const c = cores();
+    estados.forEach(e => { e.l.cont.textContent = "0 operações"; e.l.lugar.textContent = ""; desenhar(e, c); });
+    bCorrer.textContent = "Começar corrida"; resumo.textContent = "";
+  }
+  function quadro() {
+    const orcamento = Math.max(1, Math.round((n / 16) * vel)), c = cores();
+    for (const e of estados) {
+      if (e.fim) continue;
+      for (let k = 0; k < orcamento; k++) {
+        const r = e.it.next();
+        if (r.done) { e.fim = true; e.marca = null; terminados++; e.l.lugar.textContent = "✓"; break; }
+        e.ops++; e.marca = r.value;
+      }
+      e.l.cont.textContent = `${fmt.format(e.ops)} operações`;
+      desenhar(e, c);
+    }
+    if (terminados < estados.length) { raf = requestAnimationFrame(quadro); return; }
+    rodando = false; bCorrer.textContent = "Correr de novo";
+    const ranking = estados.slice().sort((x, y) => x.ops - y.ops);
+    ranking.forEach((e, i) => { e.l.lugar.textContent = `${i + 1}º`; });
+    const [primeiro, ultimo] = [ranking[0], ranking[ranking.length - 1]];
+    resumo.textContent = `${primeiro.l.alg.nome} venceu com ${fmt.format(primeiro.ops)} operações. ${ultimo.l.alg.nome} precisou de ${fmt.format(ultimo.ops)}, cerca de ${fmt.format(Math.round(ultimo.ops / primeiro.ops))} vezes mais.`;
+    olho.reagir("feliz");
+  }
+  bCorrer.addEventListener("click", () => {
+    if (rodando) { cancelAnimationFrame(raf); rodando = false; bCorrer.textContent = "Continuar"; return; }
+    if (terminados === estados.length) preparar(false);
+    rodando = true; bCorrer.textContent = "Pausar";
+    raf = requestAnimationFrame(quadro);
+  });
+  const grupo = (rotulo, opcoes, atual, aoEscolher) => {
+    const botoes = opcoes.map(([valor, texto]) => el("button", { class: "chip", type: "button", "aria-pressed": String(valor === atual), text: texto, onclick: () => {
+      botoes.forEach(b => b.setAttribute("aria-pressed", "false")); botoes[opcoes.findIndex(o => o[0] === valor)].setAttribute("aria-pressed", "true");
+      aoEscolher(valor);
+    } }));
+    return el("div", { role: "group", "aria-label": rotulo }, [el("span", { class: "rotulo-grupo", text: rotulo }), el("div", { class: "grupo" }, botoes)]);
+  };
+  const ro = new ResizeObserver(() => { const c = cores(); estados.forEach(e => desenhar(e, c)); });
+  linhas.forEach(l => ro.observe(l.canvas));
+  aoSair(() => { cancelAnimationFrame(raf); ro.disconnect(); });
+  preparar();
+  return [
+    el("p", { text: "Os cinco recebem a mesma lista e andam no mesmo ritmo: a cada quadro, todos fazem o mesmo número de operações, como comparar ou mover um item. Quem precisa de menos operações chega primeiro." }),
+    grupo("Tamanho da lista", [[20, "20 itens"], [40, "40 itens"], [80, "80 itens"]], n, v => { n = v; preparar(); }),
+    grupo("Como a lista começa", [["embaralhada", "Embaralhada"], ["quase", "Quase ordenada"], ["invertida", "Invertida"]], tipo, v => { tipo = v; preparar(); }),
+    grupo("Velocidade", [[1, "1×"], [2, "2×"], [4, "4×"]], vel, v => { vel = v; }),
+    ...linhas.map(l => l.nodo),
+    resumo,
+    el("div", { class: "linha-botoes" }, [bCorrer, el("button", { class: "botao secundario", type: "button", text: "Nova lista", onclick: () => preparar() })]),
+    el("p", { class: "apoio", text: "Teste a lista quase ordenada: o Insertion Sort, que é O(n²) no pior caso, de repente vence todo mundo. É por isso que o Timsort do Python usa ele em trechos pequenos. Big O fala do pior caso, não de todos os casos." }),
+  ];
+}
+
+/* ================================================================ história de ninar */
+const CAPITULOS = [
+  ["1894", "O dono da letra", [
+    "Era uma vez, na Alemanha, um matemático chamado Paul Bachmann. Ele passava as noites estudando números primos e precisava de um jeito curto de dizer que uma conta cresce “mais ou menos como” outra, sem se perder nos detalhes.",
+    "Então ele escreveu uma letra: O, de Ordnung, que em alemão quer dizer “ordem”. Pouca gente reparou. Ainda."]],
+  ["1909", "O amigo que espalhou a novidade", [
+    "Quinze anos depois, outro matemático alemão, Edmund Landau, achou aquela letra tão útil que passou a usá-la em todo canto. Pegou tão bem que até hoje ela é chamada de símbolo de Landau.",
+    "Só que ainda não existia nenhum computador para ela vigiar."]],
+  ["1936", "A máquina imaginária", [
+    "Na Inglaterra, um jovem chamado Alan Turing imaginou uma máquina que lia e escrevia símbolos numa fita sem fim, seguindo regras simples. Com ela, definiu o que significa computar alguma coisa.",
+    "Os computadores de verdade vieram logo depois. E, com eles, uma pergunta nova: quanto tempo eles levam?"]],
+  ["1965", "A pergunta que virou ciência", [
+    "Juris Hartmanis e Richard Stearns resolveram medir quanto tempo e quanta memória cada problema exige. Desse trabalho nasceu a teoria da complexidade computacional, que mais tarde rendeu aos dois o Prêmio Turing.",
+    "Na mesma época, Alan Cobham e Jack Edmonds combinaram uma regra que vale até hoje: algoritmo bom é aquele que cresce como n² ou n³, e não como 2ⁿ."]],
+  ["1971", "O mistério sem solução", [
+    "Stephen Cook encontrou uma família de problemas curiosos: achar a resposta é difícil, mas conferir se ela está certa é fácil. Eles ganharam o nome de NP-completos.",
+    "Daí nasceu a pergunta mais famosa da computação: P é igual a NP? Se for, muita coisa difícil fica fácil, inclusive quebrar senhas."]],
+  ["1976", "A arrumação da casa", [
+    "Donald Knuth, autor da coleção The Art of Computer Programming, percebeu que cada um usava as letras de um jeito. Então arrumou a casa: O para “no máximo”, Ω para “no mínimo” e Θ para “na medida certa”.",
+    "Knuth também ficou famoso por mandar um cheque de 2,56 dólares para quem achasse erros nos seus livros. Quase ninguém desconta: todo mundo prefere emoldurar."]],
+  ["2000", "O prêmio de um milhão", [
+    "O Instituto Clay de Matemática escolheu sete problemas dificílimos e prometeu 1 milhão de dólares para quem resolvesse cada um. P vs NP entrou na lista.",
+    "Até hoje, ninguém levou o prêmio."]],
+  ["2025", "A história continua", [
+    "Mais de cem anos depois da letra de Bachmann, ainda aparecem surpresas. Ryan Williams, do MIT, mostrou que qualquer computação cabe em bem menos memória do que se imaginava, e um grupo liderado por Ran Duan criou um caminho mínimo mais rápido que o clássico algoritmo de Dijkstra.",
+    "Ou seja, ainda tem muito capítulo para escrever. Quem sabe um deles seja seu."]],
+];
+function telaHistoria() {
+  document.title = "Era uma vez o Big O";
+  app.replaceChildren(el("article", { class: "historia coluna" }, [
+    el("h1", { text: "Era uma vez o Big O" }),
+    el("p", { class: "apoio", text: "Uma história de ninar sobre como uma letrinha de matemática virou o olho que vigia o seu código. Mova a luz para ler." }),
+    ...CAPITULOS.map(([ano, titulo, paragrafos]) => el("section", { class: "capitulo" }, [
+      el("p", { class: "ano", text: ano }), el("h2", { text: titulo }), ...paragrafos.map(t => el("p", { text: t }))])),
+    el("p", { text: "E aquela letrinha O, que nasceu num livro sobre números primos, hoje vigia cada laço que você escreve. É por isso que ela nunca dorme." }),
+    el("p", { class: "boa-noite", text: "Mas você pode. Boa noite." }),
+    el("p", { class: "acordar" }, el("button", { class: "botao", type: "button", text: "Acender as luzes", onclick: () => ninar.desligar() })),
+  ]));
+}
+
+/* ================================================================ desafio */
+const OPCOES = [
+  { k: "c1", rot: "O(1)", nome: "Constante", c: POR_ID.constante },
+  { k: "log", rot: "O(log n)", nome: "Logarítmica", c: POR_ID.logaritmica },
+  { k: "n", rot: "O(n)", nome: "Linear", c: POR_ID.linear },
+  { k: "nlog", rot: "O(n log n)", nome: "Linearítmica", c: POR_ID.linearitmica },
+  { k: "n2", rot: "O(n²)", nome: "Quadrática", c: POR_ID.quadratica },
+  { k: "exp", rot: "O(2ⁿ)", nome: "Exponencial", c: POR_ID.exponencial },
+];
+const OP = Object.fromEntries(OPCOES.map(o => [o.k, o]));
+const PERGUNTAS = [
+  { r: "c1", codigo: "def primeiro(fila):\n    return fila[0]", exp: "Acessar uma posição pelo índice custa o mesmo, tenha a lista 10 ou 10 milhões de itens." },
+  { r: "c1", codigo: 'idade = pessoas["Ana"]', exp: "Buscar uma chave num dicionário é O(1) em média, porque ele usa tabela hash." },
+  { r: "c1", codigo: "def eh_par(n):\n    return n % 2 == 0", exp: "Uma conta só, não importa o tamanho do número." },
+  { r: "log", codigo: "passos = 0\nwhile n > 1:\n    n = n // 2\n    passos += 1", exp: "Dividir n por 2 até chegar em 1 leva log₂ n voltas." },
+  { r: "log", codigo: "def busca_binaria(lista, alvo):\n    ini, fim = 0, len(lista) - 1\n    while ini <= fim:\n        meio = (ini + fim) // 2\n        if lista[meio] == alvo:\n            return meio\n        if lista[meio] < alvo:\n            ini = meio + 1\n        else:\n            fim = meio - 1\n    return -1", exp: "A cada volta o intervalo cai pela metade." },
+  { r: "n", codigo: "total = 0\nfor x in lista:\n    total += x", exp: "Um único laço que passa uma vez por cada item." },
+  { r: "n", codigo: "for x in lista:\n    print(x)\nfor x in lista:\n    print(x * 2)", exp: "Laços separados somam: O(n + n) = O(2n), e a constante some." },
+  { r: "n", codigo: "for i in range(n):\n    for j in range(10):\n        print(i, j)", exp: "O laço de dentro roda sempre 10 vezes, não n. São 10n passos, ou seja, O(n)." },
+  { r: "n", codigo: "def contem(lista, alvo):\n    return alvo in lista", exp: "O operador in numa lista olha item por item até achar." },
+  { r: "nlog", codigo: "notas_ordenadas = sorted(notas)", exp: "O sorted() do Python usa o Timsort, que é O(n log n)." },
+  { r: "nlog", codigo: "nomes.sort()\nfor nome in nomes:\n    print(nome)", exp: "Ordenar custa O(n log n) e imprimir custa O(n). Fica o termo maior: O(n log n)." },
+  { r: "n2", codigo: "for a in lista:\n    for b in lista:\n        print(a, b)", exp: "Um laço dentro de outro, ambos percorrendo a lista inteira: n × n." },
+  { r: "n2", codigo: "for item in lista:\n    if lista.count(item) > 1:\n        print(item)", exp: "Pegadinha: count() percorre a lista inteira. Um laço escondido dentro de outro dá O(n²)." },
+  { r: "n2", codigo: "for i in range(n):\n    for j in range(i):\n        print(i, j)", exp: "São 0 + 1 + 2 + … + (n − 1) voltas, cerca de n²/2. Sem a constante, O(n²)." },
+  { r: "exp", codigo: "def fib(n):\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)", exp: "Cada chamada abre outras duas e os valores são recalculados várias vezes." },
+  { r: "exp", codigo: "def f(n):\n    if n == 0:\n        return 1\n    return f(n - 1) + f(n - 1)", exp: "Duas chamadas recursivas por nível, n níveis: 2ⁿ chamadas." },
+];
+const POR_RODADA = 10, CHAVE_RECORDE = "bigo-guia-recorde";
+
+function telaDesafio() {
+  document.title = "Desafio | Big O";
+  olho.abrir();
+  const palco = el("div", { class: "leitura" });
+  app.replaceChildren(el("div", { class: "coluna" }, [
+    el("h1", { text: "Desafio", style: "font-size:clamp(2.4rem,7vw,4rem);margin:2.5rem 0 1rem" }), palco]));
+  let rodada, atual, acertos, erros, respondida;
+
+  const inicio = () => {
+    const recorde = +armazenamento.ler(CHAVE_RECORDE) || 0;
+    palco.replaceChildren(
+      el("p", { text: `São ${POR_RODADA} funções fáceis sorteadas. Para cada uma, escolha a complexidade de tempo. Dá para responder com as teclas 1 a 6 e avançar com Enter.` }),
+      el("p", { class: "apoio", text: "O olho lá em cima está acompanhando suas respostas." }),
+      recorde ? el("p", { class: "apoio", text: `Seu recorde neste navegador: ${recorde} de ${POR_RODADA}.` }) : null,
+      el("button", { class: "botao", type: "button", text: "Começar", onclick: comecar }));
+  };
+  const comecar = () => { rodada = embaralhar(PERGUNTAS).slice(0, POR_RODADA); atual = 0; acertos = 0; erros = []; pergunta(); };
+  const pergunta = () => {
+    respondida = false;
+    const q = rodada[atual];
+    const lista = el("ul", { class: "opcoes classes6" }, OPCOES.map((o, i) => el("li", {}, el("button", {
+      class: "opcao", type: "button", "data-k": o.k, onclick: () => responder(o.k) }, [
+      el("span", { class: "tecla", "aria-hidden": "true", text: String(i + 1) }), miniCurva(o.c),
+      el("span", {}, [el("span", { class: "rot", text: o.rot }), el("span", { class: "nm", text: o.nome })]) ]))));
+    palco.replaceChildren(
+      el("div", { class: "progresso" }, [el("span", { text: `Função ${atual + 1} de ${rodada.length}` }), el("span", { id: "acertos", text: `${acertos} ${acertos === 1 ? "acerto" : "acertos"}` })]),
+      el("p", { class: "enunciado", text: "Qual é a complexidade de tempo?", tabindex: "-1" }),
+      el("pre", {}, el("code", { text: q.codigo })), lista, el("div", { id: "correcao" }));
+    const top = palco.getBoundingClientRect().top;
+    if (top < 0) palco.scrollIntoView();
+    palco.querySelector(".enunciado").focus({ preventScroll: true });
+  };
+  const responder = k => {
+    if (respondida) return; respondida = true;
+    const q = rodada[atual], ok = k === q.r;
+    if (ok) acertos++; else erros.push({ q, k });
+    olho.reagir(ok ? "feliz" : "desconfiado");
+    palco.querySelectorAll(".opcao").forEach(b => { b.disabled = true; if (b.dataset.k === q.r) b.classList.add("certa"); else if (b.dataset.k === k) b.classList.add("errada"); });
+    palco.querySelector("#acertos").textContent = `${acertos} ${acertos === 1 ? "acerto" : "acertos"}`;
+    const ultima = atual === rodada.length - 1, cx = palco.querySelector("#correcao");
+    cx.className = "correcao " + (ok ? "ok" : "erro");
+    cx.replaceChildren(el("span", { class: "caneta", text: ok ? "Certo!" : `Quase. É ${OP[q.r].rot}` }), el("p", { text: q.exp }),
+      el("button", { class: "botao", type: "button", id: "proxima", text: ultima ? "Ver resultado" : "Próxima função", onclick: () => (ultima ? resultado() : (atual++, pergunta())) }));
+    avisar(ok ? "Resposta certa." : `Resposta errada. O certo é ${OP[q.r].rot}.`);
+    palco.querySelector("#proxima").focus({ preventScroll: true });
+  };
+  const resultado = () => {
+    const recorde = +armazenamento.ler(CHAVE_RECORDE) || 0;
+    if (acertos > recorde) armazenamento.gravar(CHAVE_RECORDE, String(acertos));
+    const msg = acertos === POR_RODADA ? "Gabaritou. O olho aprova." : acertos >= 7 ? "Mandou bem. Revise as que escaparam e jogue de novo."
+      : acertos >= 4 ? "Está no caminho. Dá uma passada nos módulos e tente outra rodada." : "Normal no começo. Os módulos explicam cada classe com calma.";
+    palco.replaceChildren(...[
+      el("p", { text: "Você acertou" }), el("div", { class: "nota", tabindex: "-1", text: `${acertos} de ${rodada.length}` }),
+      el("p", { text: msg + (acertos > recorde && recorde ? " Novo recorde!" : "") }),
+      erros.length ? el("h2", { text: "Para revisar" }) : null,
+      erros.length ? el("ol", { class: "revisao" }, erros.map(({ q, k }) => el("li", {}, [el("pre", {}, el("code", { text: q.codigo })),
+        el("p", {}, [`Você marcou ${OP[k].rot}, mas é ${OP[q.r].rot}. ${q.exp} `, el("a", { href: "#" + OP[q.r].c.id, text: `Ver módulo ${OP[q.r].nome}` })])]))) : null,
+      el("div", { class: "linha-botoes" }, [el("button", { class: "botao", type: "button", text: "Jogar de novo", onclick: comecar }), el("a", { class: "botao secundario", href: "#inicio", text: "Voltar ao início" })]),
+    ].filter(Boolean));
+    if (acertos >= 7) olho.reagir("feliz"); else olho.reagir("desconfiado");
+    palco.querySelector(".nota").focus();
+  };
+  const teclas = e => {
+    if (rotaAtual !== "desafio" || e.altKey || e.ctrlKey || e.metaKey || !palco.querySelector(".classes6")) return;
+    if (!respondida && /^[1-6]$/.test(e.key)) { e.preventDefault(); responder(OPCOES[+e.key - 1].k); }
+    else if (respondida && e.key === "Enter" && document.activeElement?.id !== "proxima") palco.querySelector("#proxima")?.click();
+  };
+  document.addEventListener("keydown", teclas);
+  aoSair(() => document.removeEventListener("keydown", teclas));
+  inicio();
+}
+
+/* ================================================================ início */
+const rotaInicial = rotaDoHash();
+history.replaceState(null, "", "#" + rotaInicial);
+irPara(rotaInicial, false);
+})();
+</script>
+</body>
+</html>
