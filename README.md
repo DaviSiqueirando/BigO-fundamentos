@@ -9,6 +9,7 @@ Um site de uma página só que explica a notação Big O sem complicação: com 
 - **Resumo em um minuto**: o que é Big O, por que importa e como simplificar.
 - **Seis módulos**, um para cada classe: O(1), O(log n), O(n), O(n log n), O(n²) e O(2ⁿ). Cada módulo tem analogia, sinais para reconhecer a classe no código, exemplo comentado, uma demonstração interativa e um teste rápido.
 - **Transições em forma de gráfico**: ao abrir um módulo, a curva dele é desenhada no plano cartesiano e a página se abre a partir da ponta da curva.
+- **Melhor, pior e caso médio**: uma página com busca linear interativa, as notações O, Ω e Θ explicadas com gráfico e uma cola com os casos dos principais algoritmos. Cada módulo também traz os próprios casos.
 - **Ordenações animadas**: o Merge Sort dividindo e recombinando a lista passo a passo, e uma corrida entre Merge, Quick, Insertion, Selection e Bubble Sort na mesma lista.
 - **Desafio**: 10 funções sorteadas para identificar a complexidade, com correção e recorde salvo no navegador.
 - **O olho do Big O**: clique no “O” do título e ele abre, acompanhando o cursor.

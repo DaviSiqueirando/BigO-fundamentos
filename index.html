@@ -293,6 +293,28 @@ html.ninar .dica { z-index: 95; color: #F4C66B; text-shadow: 0 0 .25em rgba(20, 
 .revisao { padding-left: 1.25rem; }
 .revisao li { margin-bottom: 1rem; }
 
+.titulo-pagina { font-size: clamp(2.4rem, 7vw, 4rem); margin: 2.5rem 0 1rem; }
+.status-recorde { margin-top: .4rem; font-weight: 700; }
+.teste + .teste { margin-top: 2.5rem; }
+.notacoes { margin: 0 0 1.25rem; }
+.notacoes dt { font-weight: 700; margin-top: 1rem; }
+.notacoes dt code { font-size: 1.15em; }
+.notacoes dd { margin: .2rem 0 0; }
+.theta { width: 100%; height: auto; display: block; margin: 1rem 0 .5rem; }
+.theta .eixo { stroke: var(--tinta-suave); stroke-width: 1.5; fill: none; }
+.theta .limite { stroke: var(--tinta-suave); stroke-width: 2; stroke-dasharray: 7 6; fill: none; }
+.theta .fn { stroke: var(--tinta); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+.theta .n0 { stroke: var(--vermelho); stroke-width: 1.5; stroke-dasharray: 2 5; }
+.theta text { fill: var(--tinta); font-family: "JetBrains Mono", monospace; font-size: 15px; font-weight: 600; }
+.theta .rot-n0 { fill: var(--vermelho); font-family: "Caveat", "Comic Sans MS", cursive; font-size: 24px; }
+.theta .legenda { fill: var(--tinta-suave); font-weight: 400; }
+.tabela-wrap { overflow-x: auto; margin: .5rem 0 1rem; max-width: 52rem; }
+.cola { border-collapse: collapse; width: 100%; min-width: 36rem; background: var(--papel); font-size: .95rem; }
+.cola th, .cola td { text-align: left; padding: .55rem .75rem; border-bottom: 1px solid var(--borda); }
+.cola thead th { color: var(--tinta-suave); font-size: .85rem; border-bottom: 1.5px solid var(--tinta); }
+.cola tbody th { font-weight: 700; white-space: nowrap; }
+.cola td { font-family: "JetBrains Mono", monospace; white-space: nowrap; }
+.opcao > span { flex: 1; }
 footer { margin-top: 5rem; padding: 1.5rem 0 3rem; color: var(--tinta-suave); font-size: .9rem; }
 
 /* ---------------- transição entre telas ---------------- */
@@ -368,6 +390,7 @@ footer { margin-top: 5rem; padding: 1.5rem 0 3rem; color: var(--tinta-suave); fo
       <span id="olho-ajuda" class="sr">Com o olho aberto, arraste ele para a direita, ou aperte a seta para a direita, para ligar o modo história de ninar.</span>
       <nav class="menu" aria-label="Principal">
         <a href="#inicio">Início</a>
+        <a href="#casos">Casos</a>
         <a href="#desafio">Desafio</a>
       </nav>
     </div>
@@ -467,6 +490,15 @@ const CLASSES = [
       exp: "A função f chama a si mesma duas vezes a cada nível: 2 × 2 × … × 2 = 2ⁿ chamadas. O Fibonacci com laço é O(n) e a multiplicação é O(1)." } },
 ];
 const POR_ID = Object.fromEntries(CLASSES.map(c => [c.id, c]));
+const CASOS_POR_CLASSE = {
+  constante: "Aqui não tem sorte nem azar: melhor, médio e pior caso são todos O(1).",
+  logaritmica: "No melhor caso, o número procurado está bem no meio e a busca binária acaba no primeiro passo, Ω(1). No pior, são cerca de log₂ n passos.",
+  linear: "Melhor caso: o item é o primeiro, 1 comparação. Pior caso: está no fim ou nem está na lista, n comparações. Na média são n/2, que continua sendo O(n).",
+  linearitmica: "O Merge Sort é Θ(n log n) em qualquer caso, com a lista bagunçada ou não. Já o Quick Sort é n log n na média, mas pode cair para n² no pior caso.",
+  quadratica: "O Insertion Sort é O(n²) no pior caso, com a lista invertida. Com a lista já ordenada, faz só n comparações: o melhor caso é Ω(n).",
+  exponencial: "O Fibonacci recursivo faz o mesmo monte de chamadas para um mesmo n, então não existe melhor caso para salvar. O(2ⁿ) é um teto; a conta exata cresce como 1,6ⁿ, que continua exponencial.",
+};
+CLASSES.forEach(c => { c.casos = CASOS_POR_CLASSE[c.id]; });
 
 /* curvas: mesma matemática nos cards, no topo do módulo e na transição */
 function pontosCurva(c, w, h, passos = 140, alem = 0) {
@@ -928,7 +960,7 @@ const app = $("#app"), topo = $("#topo");
 
 function rotaDoHash() {
   const h = decodeURIComponent(location.hash.slice(1));
-  return h === "desafio" || POR_ID[h] || (h === "historia" && ninar.ativo) ? h : "inicio";
+  return h === "desafio" || h === "casos" || POR_ID[h] || (h === "historia" && ninar.ativo) ? h : "inicio";
 }
 function irPara(rota, focar = true) {
   limpezas.splice(0).forEach(f => f());
@@ -939,6 +971,7 @@ function irPara(rota, focar = true) {
   scrollTo(0, 0);
   if (rota === "inicio") telaInicio();
   else if (rota === "desafio") telaDesafio();
+  else if (rota === "casos") telaCasos();
   else if (rota === "historia") telaHistoria();
   else telaModulo(POR_ID[rota]);
   if (focar) app.focus({ preventScroll: true });
@@ -948,12 +981,13 @@ document.addEventListener("click", e => {
   const a = e.target.closest("a[href^='#']");
   if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   const destino = a.getAttribute("href").slice(1);
-  const rota = destino === "desafio" || POR_ID[destino] ? destino : destino === "inicio" ? "inicio" : null;
+  const rota = destino === "desafio" || destino === "casos" || POR_ID[destino] ? destino : destino === "inicio" ? "inicio" : null;
   if (!rota) return;
   e.preventDefault();
   if (ocupado || rota === rotaAtual) return;
   if (POR_ID[rota]) animarAte(rota, [POR_ID[rota]]);
   else if (rota === "desafio") animarAte(rota, CLASSES);
+  else if (rota === "casos") animarAte(rota, CURVAS_CASOS);
   else animarInicio();
 });
 addEventListener("popstate", () => { const r = rotaDoHash(); if (r !== rotaAtual && !ocupado) irPara(r); });
@@ -984,7 +1018,12 @@ function telaInicio() {
     ])))),
 
     el("section", { class: "chamada-desafio" }, [
-      el("div", {}, [el("h2", { text: "Desafio" }), el("p", { class: "apoio", text: "10 funções fáceis sorteadas. Você diz a complexidade de cada uma." })]),
+      el("div", {}, [el("h2", { text: "Melhor, pior e caso médio" }), el("p", { class: "apoio", text: "Por que a mesma busca às vezes leva 1 passo e às vezes leva n. E o que são O, Ω e Θ." })]),
+      el("a", { class: "botao secundario", href: "#casos", text: "Abrir o guia dos casos" }),
+    ]),
+    el("section", { class: "chamada-desafio", style: "margin-top:0;border-top:0" }, [
+      el("div", {}, [el("h2", { text: "Desafio" }), el("p", { class: "apoio", text: "10 funções fáceis sorteadas. Você diz a complexidade de cada uma." }),
+        el("p", { class: "status-recorde", text: textoRecorde() })]),
       el("a", { class: "botao", href: "#desafio", text: "Começar desafio" }),
     ]),
   ]));
@@ -1010,11 +1049,13 @@ function telaModulo(c) {
       el("h2", { text: "Exemplo" }),
       el("pre", {}, el("code", { text: c.codigo })),
       el("p", { text: c.nota }),
+      el("h2", { text: "Melhor e pior caso" }),
+      el("p", {}, [c.casos + " ", el("a", { href: "#casos", text: "Ver o guia dos casos" }), "."]),
       el("h2", { text: "Mexa você mesmo" }),
       demo(c),
       c.id === "quadratica" ? el("p", { class: "apoio", style: "margin-top:1rem" }, ["Quer ver o Bubble Sort, outro O(n²), perdendo uma corrida? ", el("a", { href: "#linearitmica", text: "Abra o módulo O(n log n)" }), "."]) : null,
       el("h2", { text: "Acerte esta" }),
-      testeRapido(c),
+      testeRapido(c.teste),
     ]),
     el("nav", { class: "mod-nav", "aria-label": "Outros módulos" }, [
       ant ? el("a", { href: "#" + ant.id }, [el("span", { text: "Módulo anterior" }), `${ant.rot} ${ant.nome}`]) : el("a", { href: "#inicio" }, [el("span", { text: "Voltar" }), "Início"]),
@@ -1024,8 +1065,8 @@ function telaModulo(c) {
   ]));
 }
 
-function testeRapido(c) {
-  const t = c.teste, caixa = el("div", { class: "correcao", "aria-live": "polite" });
+function testeRapido(t) {
+  const caixa = el("div", { class: "correcao", "aria-live": "polite" });
   const botoes = t.ops.map((op, k) => el("button", { class: "opcao", type: "button", onclick: () => {
     botoes.forEach((b, j) => { b.disabled = true; if (j === t.certa) b.classList.add("certa"); else if (j === k) b.classList.add("errada"); });
     const ok = k === t.certa;
@@ -1033,8 +1074,8 @@ function testeRapido(c) {
     caixa.className = "correcao " + (ok ? "ok" : "erro");
     caixa.replaceChildren(el("span", { class: "caneta", text: ok ? "Certo!" : "Quase!" }), el("p", { text: t.exp }),
       el("button", { class: "botao secundario", type: "button", text: "Tentar de novo", onclick: () => { botoes.forEach(b => { b.disabled = false; b.classList.remove("certa", "errada"); }); caixa.replaceChildren(); } }));
-  } }, el("pre", {}, el("code", { text: op }))));
-  return el("div", {}, [el("p", { class: "enunciado", text: t.q }), el("ul", { class: "opcoes" }, botoes.map(b => el("li", {}, b))), caixa]);
+  } }, t.texto ? el("span", { text: op }) : el("pre", {}, el("code", { text: op }))));
+  return el("div", { class: "teste" }, [el("p", { class: "enunciado", text: t.q }), el("ul", { class: "opcoes" }, botoes.map(b => el("li", {}, b))), caixa]);
 }
 
 /* ---------- demonstrações ---------- */
@@ -1396,13 +1437,7 @@ function demoCorrida() {
     rodando = true; bCorrer.textContent = "Pausar";
     raf = requestAnimationFrame(quadro);
   });
-  const grupo = (rotulo, opcoes, atual, aoEscolher) => {
-    const botoes = opcoes.map(([valor, texto]) => el("button", { class: "chip", type: "button", "aria-pressed": String(valor === atual), text: texto, onclick: () => {
-      botoes.forEach(b => b.setAttribute("aria-pressed", "false")); botoes[opcoes.findIndex(o => o[0] === valor)].setAttribute("aria-pressed", "true");
-      aoEscolher(valor);
-    } }));
-    return el("div", { role: "group", "aria-label": rotulo }, [el("span", { class: "rotulo-grupo", text: rotulo }), el("div", { class: "grupo" }, botoes)]);
-  };
+  const grupo = grupoChips;
   const ro = new ResizeObserver(() => { const c = cores(); estados.forEach(e => desenhar(e, c)); });
   linhas.forEach(l => ro.observe(l.canvas));
   aoSair(() => { cancelAnimationFrame(raf); ro.disconnect(); });
@@ -1459,6 +1494,160 @@ function telaHistoria() {
   ]));
 }
 
+/* ================================================================ melhor, pior e caso médio */
+const CURVAS_CASOS = [
+  { id: "melhor", f: () => 1 }, { id: "medio", f: n => n / 2 }, { id: "pior", f: n => n },
+];
+
+function grupoChips(rotulo, opcoes, atual, aoEscolher) {
+  const botoes = opcoes.map(([valor, texto]) => el("button", {
+    class: "chip", type: "button", "aria-pressed": String(valor === atual), text: texto,
+    onclick: () => { botoes.forEach((b, i) => b.setAttribute("aria-pressed", String(opcoes[i][0] === valor))); aoEscolher(valor); },
+  }));
+  return el("div", { role: "group", "aria-label": rotulo }, [el("span", { class: "rotulo-grupo", text: rotulo }), el("div", { class: "grupo" }, botoes)]);
+}
+
+function demoCasos() {
+  const N = 10;
+  let valores = [], alvo = 0, onde = "inicio", timer = null;
+  const caixas = el("div", { class: "caixas", "aria-hidden": "true" });
+  const placar = el("p", { class: "placar", "aria-live": "polite" });
+  const veredito = el("p", { "aria-live": "polite" });
+  const bProcurar = el("button", { class: "botao", type: "button" });
+  const parar = () => { clearTimeout(timer); timer = null; };
+
+  function preparar() {
+    parar();
+    const todos = embaralhar(Array.from({ length: 99 }, (_, k) => k + 1));
+    valores = todos.slice(0, N);
+    const pos = { inicio: 0, meio: Math.floor(N / 2) - 1, fim: N - 1 }[onde];
+    alvo = onde === "fora" ? todos[N] : valores[pos];
+    caixas.replaceChildren(...valores.map(v => el("span", { class: "caixa", text: String(v) })));
+    placar.textContent = `Procurando o ${alvo}. Comparações: 0`;
+    veredito.textContent = "";
+    bProcurar.textContent = `Procurar o ${alvo}`; bProcurar.disabled = false;
+  }
+  function procurar() {
+    bProcurar.disabled = true;
+    let k = 0;
+    const passo = () => {
+      [...caixas.children].forEach((cx, j) => cx.classList.toggle("olhando", j === k));
+      placar.textContent = `Procurando o ${alvo}. Comparações: ${k + 1}`;
+      if (valores[k] === alvo) { caixas.children[k].classList.replace("olhando", "achou"); return concluir(k + 1, true); }
+      caixas.children[k].classList.add("descartada");
+      if (++k >= N) return concluir(N, false);
+      timer = setTimeout(passo, reduzirMovimento.matches ? 0 : 150);
+    };
+    passo();
+  }
+  function concluir(comps, achou) {
+    timer = null;
+    if (comps === 1) { veredito.textContent = "Melhor caso: 1 comparação. Não tem como ser mais rápido, então o limite de baixo é Ω(1)."; olho.reagir("feliz"); }
+    else if (comps === N) { veredito.textContent = `Pior caso: ${N} comparações, uma para cada item${achou ? "" : ", e o número nem estava lá"}. É esse teto que o O(n) promete nunca passar.`; olho.reagir("desconfiado"); }
+    else veredito.textContent = `${comps} comparações: nem o melhor nem o pior caso. Experimente as outras posições.`;
+  }
+  function media() {
+    parar();
+    let soma = 0;
+    for (let i = 0; i < 1000; i++) soma += 1 + Math.floor(Math.random() * N);   // posição sorteada de 1 a N
+    const m = (soma / 1000).toFixed(1).replace(".", ",");
+    veredito.textContent = `Em 1.000 buscas com o número numa posição sorteada, a média foi de ${m} comparações, perto de n/2. Como n/2 é só n dividido por uma constante, o caso médio continua sendo O(n).`;
+  }
+  bProcurar.addEventListener("click", procurar);
+  aoSair(parar);
+  preparar();
+  return [
+    grupoChips("Onde está o número", [["inicio", "No começo"], ["meio", "No meio"], ["fim", "No fim"], ["fora", "Não está na lista"]], onde, v => { onde = v; preparar(); }),
+    caixas, placar, veredito,
+    el("div", { class: "linha-botoes" }, [bProcurar, el("button", { class: "botao secundario", type: "button", text: "Fazer 1.000 buscas sorteadas", onclick: media })]),
+  ];
+}
+
+/* f(n) presa entre c1·g(n) e c2·g(n) depois de n0: a ideia de Θ */
+function graficoTheta() {
+  const W = 590, H = 300, x0 = 46, y0 = 262, larg = 430, alt = 236, nMax = 10, yMax = 15;
+  const X = n => x0 + (n / nMax) * larg, Y = v => y0 - (Math.min(v, yMax) / yMax) * alt;
+  const f = n => n + 0.3 * n * Math.sin(1.3 * n) + 2.4 * Math.exp(-2 * n);
+  const sup = n => 1.5 * n, inf = n => 0.6 * n;
+  const linha = fn => Array.from({ length: 121 }, (_, i) => { const n = (i / 120) * nMax; return (i ? "L" : "M") + X(n).toFixed(1) + " " + Y(fn(n)).toFixed(1); }).join(" ");
+  let n0 = 0;
+  for (let n = 0; n <= nMax; n += 0.01) if (f(n) > sup(n) || f(n) < inf(n)) n0 = n;
+  const s = svg("svg", { class: "theta", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-labelledby": "theta-desc" });
+  const desc = svg("desc", { id: "theta-desc" }); desc.textContent = "Gráfico: a função f(n) começa fora da faixa, mas depois do ponto n zero fica sempre entre as retas c1 vezes g(n), embaixo, e c2 vezes g(n), em cima.";
+  const texto = (x, y, t, cls, anchor = "start") => { const e = svg("text", { x, y, class: cls || "", "text-anchor": anchor }); e.textContent = t; return e; };
+  s.append(desc,
+    svg("path", { class: "eixo", d: `M${x0} 10 V${y0} H${W - 8}` }),
+    svg("line", { class: "n0", x1: X(n0), y1: 14, x2: X(n0), y2: y0 }),
+    svg("path", { class: "limite", d: linha(sup) }), svg("path", { class: "limite", d: linha(inf) }),
+    svg("path", { class: "fn", d: linha(f) }),
+    texto(X(nMax) - 4, Y(sup(nMax)) + 4, "c₂·g(n)", "", "end"),
+    texto(X(nMax) + 6, Y(f(nMax)) + 5, "f(n)"),
+    texto(X(nMax) + 6, Y(inf(nMax)) + 5, "c₁·g(n)"),
+    texto(X(n0) + 6, y0 - 8, "n₀", "rot-n0"),
+    texto(W - 8, y0 + 26, "n", "legenda", "end"));
+  return s;
+}
+
+const COLA = [
+  ["Busca linear", "O(1)", "O(n)", "O(n)", "O(1)"],
+  ["Busca binária", "O(1)", "O(log n)", "O(log n)", "O(1)"],
+  ["Busca em dicionário", "O(1)", "O(1)", "O(n)", "—"],
+  ["Bubble Sort", "O(n)", "O(n²)", "O(n²)", "O(1)"],
+  ["Insertion Sort", "O(n)", "O(n²)", "O(n²)", "O(1)"],
+  ["Selection Sort", "O(n²)", "O(n²)", "O(n²)", "O(1)"],
+  ["Merge Sort", "O(n log n)", "O(n log n)", "O(n log n)", "O(n)"],
+  ["Quick Sort", "O(n log n)", "O(n log n)", "O(n²)", "O(log n)"],
+];
+
+function telaCasos() {
+  document.title = "Melhor, pior e caso médio | Big O";
+  app.replaceChildren(el("div", { class: "coluna" }, [
+    el("h1", { class: "titulo-pagina", text: "Melhor, pior e caso médio" }),
+    el("p", { class: "subtitulo", style: "margin-top:0", text: "O mesmo algoritmo pode ser rápido ou lento dependendo da entrada que recebe. Aqui entram os três casos e as notações O, Ω e Θ." }),
+    el("div", { class: "leitura" }, [
+      el("h2", { text: "As chaves de casa" }),
+      el("p", { text: "Pense em procurar as chaves antes de sair. Às vezes elas estão no bolso e o problema se resolve em um segundo: esse é o melhor caso. Em outros dias você revira a casa inteira e descobre que estavam na porta: esse é o pior caso. Na maioria das vezes, elas aparecem em algum lugar no meio do caminho: esse é o caso médio." }),
+      el("h2", { text: "Teste na busca linear" }),
+      el("p", { text: "Uma lista de 10 números fora de ordem. Escolha onde o número procurado está e veja quantas comparações a busca precisa." }),
+      el("div", { class: "demo" }, demoCasos()),
+
+      el("h2", { text: "O, Ω e Θ" }),
+      el("p", { text: "Os casos dizem qual entrada estamos analisando. As notações dizem que tipo de limite estamos dando para o crescimento." }),
+      el("dl", { class: "notacoes" }, [
+        el("dt", {}, [el("code", { text: "O" }), " (Big O): limite de cima"]),
+        el("dd", { text: "“Cresce no máximo assim.” É uma garantia: o algoritmo nunca passa desse teto." }),
+        el("dt", {}, [el("code", { text: "Ω" }), " (Ômega): limite de baixo"]),
+        el("dd", { text: "“Cresce no mínimo assim.” Nenhuma entrada faz o algoritmo terminar mais rápido que isso." }),
+        el("dt", {}, [el("code", { text: "Θ" }), " (Theta): limite justo"]),
+        el("dd", { text: "Quando o limite de cima e o de baixo são a mesma função. É a descrição mais precisa." }),
+      ]),
+      el("p", { text: "Pense no GPS: “você chega em no máximo 3 horas” é um Big O. “A viagem leva pelo menos 1 hora” é um Ômega. “Você chega em cerca de 2 horas, nem muito mais nem muito menos” é um Theta." }),
+      graficoTheta(),
+      el("p", { class: "apoio", text: "No começo, f(n) pode sair da faixa. Mas a partir de n₀ ela fica sempre entre c₁·g(n) e c₂·g(n). Por isso dizemos que f(n) é Θ(g(n)): ao mesmo tempo O(g(n)) e Ω(g(n))." }),
+
+      el("h2", { text: "Cola rápida" }),
+      el("p", { text: "Os casos dos algoritmos que aparecem no guia. A última coluna é a memória extra que cada um usa." }),
+    ]),
+    el("div", { class: "tabela-wrap" }, el("table", { class: "cola" }, [
+      el("thead", {}, el("tr", {}, ["Algoritmo", "Melhor caso", "Caso médio", "Pior caso", "Memória extra"].map(t => el("th", { scope: "col", text: t })))),
+      el("tbody", {}, COLA.map(l => el("tr", {}, l.map((t, i) => el(i ? "td" : "th", i ? { text: t } : { scope: "row", text: t }))))),
+    ])),
+    el("div", { class: "leitura" }, [
+      el("p", { class: "apoio", text: "A busca em dicionário só chega a O(n) num pior caso raro, quando muitas chaves caem no mesmo lugar da tabela hash." }),
+      el("h2", { text: "Por que o pior caso costuma mandar" }),
+      el("p", { text: "O pior caso funciona como garantia. Ninguém quer um aplicativo de banco que normalmente responde rápido, mas de vez em quando leva dez minutos para abrir o extrato. Além disso, quem ataca um sistema escolhe de propósito as entradas que levam ao pior caso." }),
+      el("p", {}, ["Mas o caso médio também conta. O Quick Sort é O(n²) no pior caso e mesmo assim está entre os mais usados, porque na prática esse pior caso quase nunca aparece. Dá para ver isso na ", el("a", { href: "#linearitmica", text: "corrida de ordenação do módulo O(n log n)" }), "."]),
+      el("h2", { text: "Acerte esta" }),
+      testeRapido({ q: "Uma busca linear acha o número logo na primeira posição. Isso é…", certa: 0, texto: true,
+        ops: ["O melhor caso, que dá o limite Ω(1)", "O pior caso, que dá o limite O(n)", "O caso médio, de cerca de n/2 comparações"],
+        exp: "Achar na primeira tentativa é o melhor caso possível: uma comparação só. É ele que define o limite de baixo, Ω(1)." }),
+      testeRapido({ q: "Qual notação diz que o algoritmo cresce “no mínimo” como uma função?", certa: 2, texto: true,
+        ops: ["O (Big O)", "Θ (Theta)", "Ω (Ômega)"],
+        exp: "Ω é o limite de baixo. O é o de cima, e Θ vale quando os dois coincidem." }),
+    ]),
+  ]));
+}
+
 /* ================================================================ desafio */
 const OPCOES = [
   { k: "c1", rot: "O(1)", nome: "Constante", c: POR_ID.constante },
@@ -1488,6 +1677,11 @@ const PERGUNTAS = [
   { r: "exp", codigo: "def f(n):\n    if n == 0:\n        return 1\n    return f(n - 1) + f(n - 1)", exp: "Duas chamadas recursivas por nível, n níveis: 2ⁿ chamadas." },
 ];
 const POR_RODADA = 10, CHAVE_RECORDE = "bigo-guia-recorde";
+function textoRecorde() {
+  const r = +armazenamento.ler(CHAVE_RECORDE) || 0;
+  if (armazenamento.ler(CHAVE_RECORDE) === null) return "Você ainda não fez o desafio. O primeiro resultado vira o seu recorde.";
+  return r === POR_RODADA ? `Seu recorde: ${r} de ${POR_RODADA}. Gabaritou!` : `Seu recorde: ${r} de ${POR_RODADA}. Dá para bater?`;
+}
 
 function telaDesafio() {
   document.title = "Desafio | Big O";
@@ -1502,7 +1696,7 @@ function telaDesafio() {
     palco.replaceChildren(
       el("p", { text: `São ${POR_RODADA} funções fáceis sorteadas. Para cada uma, escolha a complexidade de tempo. Dá para responder com as teclas 1 a 6 e avançar com Enter.` }),
       el("p", { class: "apoio", text: "O olho lá em cima está acompanhando suas respostas." }),
-      recorde ? el("p", { class: "apoio", text: `Seu recorde neste navegador: ${recorde} de ${POR_RODADA}.` }) : el("p", { class: "apoio", text: `Seu recorde neste navegador é ZERO, faça um desafio e descubra.` }),
+      el("p", { class: "status-recorde", text: textoRecorde() }),
       el("button", { class: "botao", type: "button", text: "Começar", onclick: comecar }));
   };
   const comecar = () => { rodada = embaralhar(PERGUNTAS).slice(0, POR_RODADA); atual = 0; acertos = 0; erros = []; pergunta(); };
@@ -1537,7 +1731,7 @@ function telaDesafio() {
   };
   const resultado = () => {
     const recorde = +armazenamento.ler(CHAVE_RECORDE) || 0;
-    if (acertos > recorde) armazenamento.gravar(CHAVE_RECORDE, String(acertos));
+    if (acertos > recorde || armazenamento.ler(CHAVE_RECORDE) === null) armazenamento.gravar(CHAVE_RECORDE, String(acertos));
     const msg = acertos === POR_RODADA ? "Gabaritou. O olho aprova." : acertos >= 7 ? "Mandou bem. Revise as que escaparam e jogue de novo."
       : acertos >= 4 ? "Está no caminho. Dá uma passada nos módulos e tente outra rodada." : "Normal no começo. Os módulos explicam cada classe com calma.";
     palco.replaceChildren(...[
