@@ -1502,7 +1502,7 @@ function telaDesafio() {
     palco.replaceChildren(
       el("p", { text: `São ${POR_RODADA} funções fáceis sorteadas. Para cada uma, escolha a complexidade de tempo. Dá para responder com as teclas 1 a 6 e avançar com Enter.` }),
       el("p", { class: "apoio", text: "O olho lá em cima está acompanhando suas respostas." }),
-      recorde ? el("p", { class: "apoio", text: `Seu recorde neste navegador: ${recorde} de ${POR_RODADA}.` }) : null,
+      recorde ? el("p", { class: "apoio", text: `Seu recorde neste navegador: ${recorde} de ${POR_RODADA}.` }) : el("p", { class: "apoio", text: `Seu recorde neste navegador é ZERO, faça um desafio e descubra.` }),
       el("button", { class: "botao", type: "button", text: "Começar", onclick: comecar }));
   };
   const comecar = () => { rodada = embaralhar(PERGUNTAS).slice(0, POR_RODADA); atual = 0; acertos = 0; erros = []; pergunta(); };
